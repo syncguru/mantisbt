@@ -46,3 +46,7 @@ web.config
 #libraries
 library/FirePHPCore
 library/ezc
+
+# node
+node_modules/
+npm-debug.log

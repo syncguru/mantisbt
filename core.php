@@ -49,6 +49,8 @@
  * @uses utf8/str_pad.php
  */
 
+date_default_timezone_set('America/Los_Angeles');
+
 /**
  * Before doing anything... check if MantisBT is down for maintenance
  *
