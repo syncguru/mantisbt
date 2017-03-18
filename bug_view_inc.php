@@ -142,8 +142,7 @@ $t_product_version_string = string_display_line( $t_product_version_string );
 $t_target_version_string = string_display_line( $t_target_version_string );
 $t_fixed_in_version_string = string_display_line( $t_fixed_in_version_string );
 
-$t_bug_id = $f_bug_id;
-$t_form_title = lang_get( 'bug_view_title' );
+$t_bug_id = $f_bug_id;;
 $t_wiki_link = config_get_global( 'wiki_enable' ) == ON ? 'wiki.php?id=' . $f_bug_id : '';
 
 if( access_has_bug_level( config_get( 'view_history_threshold' ), $f_bug_id ) ) {
@@ -233,30 +232,31 @@ $t_links = event_signal( 'EVENT_MENU_ISSUE', $f_bug_id );
 # Start of Template
 #
 
+# choose color based on status
+$t_status_label = html_get_status_css_class( $t_bug->status );
+
 echo '<div class="col-md-12 col-xs-12">';
-echo '<div class="widget-box widget-color-blue2">';
-echo '<div class="widget-header widget-header-small">';
-echo '<h4 class="widget-title lighter">';
-echo '<i class="ace-icon fa fa-bars"></i>';
-echo $t_form_title;
-echo '</h4>';
-echo '</div>';
+echo '<div class="widget-box">';
+echo '<div class="widget-header padding-8">';
+echo '<h3 class="widget-issue-title dark">';
+echo '<i class="fa fa-square fa-status-box ' . $t_status_label . '"></i> ';
+echo $t_summary;
+echo '</h3>';
 
-echo '<div class="widget-body">';
-
-echo '<div class="widget-toolbox padding-8 clearfix noprint">';
-echo '<div class="btn-group pull-left">';
+echo '<div class="space-4"></div>';
+echo '<div class="clearfix noprint">';
+echo '<div class="btn-group pull-left hidden-xs">';
 
 # Jump to Bugnotes
-print_small_button( '#bugnotes', lang_get( 'jump_to_bugnotes' ) );
+print_extra_small_button( '#bugnotes', lang_get( 'jump_to_bugnotes' ) );
 
 # Send Bug Reminder
 if( $t_show_reminder_link ) {
-	print_small_button( $t_bug_reminder_link, lang_get( 'bug_reminder' ) );
+	print_extra_small_button( $t_bug_reminder_link, lang_get( 'bug_reminder' ) );
 }
 
 if( !is_blank( $t_wiki_link ) ) {
-	print_small_button( $t_wiki_link, lang_get( 'wiki' ) );
+	print_extra_small_button( $t_wiki_link, lang_get( 'wiki' ) );
 }
 
 foreach ( $t_links as $t_plugin => $t_hooks ) {
@@ -278,7 +278,7 @@ foreach ( $t_links as $t_plugin => $t_hooks ) {
 # Links
 if( !is_blank( $t_history_link ) ) {
 	# History
-	print_small_button( $t_history_link, lang_get( 'bug_history' ) );
+	print_extra_small_button( $t_history_link, lang_get( 'bug_history' ) );
 }
 
 echo '</div>';
@@ -290,17 +290,19 @@ if( $t_bugslist ) {
 	$t_index = array_search( $f_bug_id, $t_bugslist );
 	if( false !== $t_index ) {
 		if( isset( $t_bugslist[$t_index-1] ) ) {
-			print_small_button( 'view.php?id='.$t_bugslist[$t_index-1], '&lt;&lt;' );
+			print_extra_small_button( 'view.php?id='.$t_bugslist[$t_index-1], '&lt;&lt;' );
 		}
 
 		if( isset( $t_bugslist[$t_index+1] ) ) {
-			print_small_button( 'view.php?id='.$t_bugslist[$t_index+1], '&gt;&gt;' );
+			print_extra_small_button( 'view.php?id='.$t_bugslist[$t_index+1], '&gt;&gt;' );
 		}
 	}
 }
 echo '</div>';
 echo '</div>';
 
+echo '</div>';
+echo '<div class="widget-body">';
 echo '<div class="widget-main no-padding">';
 echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-condensed">';
