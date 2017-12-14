@@ -84,7 +84,7 @@ require_api( 'user_api.php' );
  * if the option is disabled, returns the current value and a hidden input for that value.
  * @param array $p_filter Filter array
  * @param string $p_filter_target Filter field name
- * @param boolean $p_show_inputs Whether to return a visible form input or a text value.
+ * @param boolean $p_show_inputs True to return a visible form input or false for a text value.
  * @return string The html content for the field requested
  */
 function filter_form_get_input( array $p_filter, $p_filter_target, $p_show_inputs = true ) {
@@ -196,7 +196,7 @@ function print_filter_reporter_id( array $p_filter = null ) {
 	#
 	if( ( ON === config_get( 'limit_reporters' ) ) && ( !access_has_project_level( access_threshold_min_level( config_get( 'report_bug_threshold' ) ) + 1 ) ) ) {
 		$t_id = auth_get_current_user_id();
-		$t_username = user_get_field( $t_id, 'username' );
+		$t_username = user_get_username( $t_id );
 		$t_realname = user_get_field( $t_id, 'realname' );
 		$t_display_name = string_attribute( $t_username );
 		if( ( isset( $t_realname ) ) && ( $t_realname > '' ) && ( ON == config_get( 'show_realname' ) ) ) {
@@ -282,10 +282,9 @@ function print_filter_user_monitor( array $p_filter = null ) {
 		echo '>[' . lang_get( 'myself' ) . ']</option>';
 	}
 	$t_threshold = config_get( 'show_monitor_list_threshold' );
-	$t_has_project_level = access_has_project_level( $t_threshold );
 
-	if( $t_has_project_level ) {
-		print_reporter_option_list( $p_filter[FILTER_PROPERTY_MONITOR_USER_ID] );
+	if( access_has_project_level( $t_threshold ) ) {
+		print_user_option_list( $p_filter[FILTER_PROPERTY_MONITOR_USER_ID], null, config_get( 'monitor_bug_threshold' ) );
 	}
 	?>
 		</select>
@@ -1229,12 +1228,47 @@ function print_filter_values_do_filter_by_date( array $p_filter ) {
 	$t_filter = $p_filter;
 	if( 'on' == $t_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] ) {
 		echo '<input type="hidden" name="', FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] ), '" />';
-		echo '<input type="hidden" name="', FILTER_PROPERTY_START_DATE_SUBMITTED, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] ), '" />';
-		echo '<input type="hidden" name="', FILTER_PROPERTY_END_DATE_SUBMITTED, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_DAY, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_DAY, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] ), '" />';
 
-		echo $t_filter[FILTER_PROPERTY_START_DATE_SUBMITTED];
+		$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+		$t_time = mktime( 0, 0, 0, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH], $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY], $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] );
+		foreach( $t_chars as $t_char ) {
+			if( strcasecmp( $t_char, 'M' ) == 0 ) {
+				echo ' ';
+				echo lang_get( 'month_' . strtolower ( date( 'F', $t_time ) ) );
+			}
+			if( strcasecmp( $t_char, 'D' ) == 0 ) {
+				echo ' ';
+				echo date( 'd', $t_time );
+			}
+			if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+				echo ' ';
+				echo date( 'Y', $t_time );
+			}
+		}
+
 		echo ' - ';
-		echo $t_filter[FILTER_PROPERTY_END_DATE_SUBMITTED];
+
+		$t_time = mktime( 0, 0, 0, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH], $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY], $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] );
+		foreach( $t_chars as $t_char ) {
+			if( strcasecmp( $t_char, 'M' ) == 0 ) {
+				echo ' ';
+				echo lang_get( 'month_' . strtolower ( date( 'F', $t_time ) ) );
+			}
+			if( strcasecmp( $t_char, 'D' ) == 0 ) {
+				echo ' ';
+				echo date( 'd', $t_time );
+			}
+			if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+				echo ' ';
+				echo date( 'Y', $t_time );
+			}
+		}
 	} else {
 		echo lang_get( 'no' );
 	}
@@ -1255,7 +1289,7 @@ function print_filter_do_filter_by_date( $p_hide_checkbox = false, array $p_filt
 ?>
 		<table cellspacing="0" cellpadding="0">
 <?php
-    $t_menu_readonly =  '';
+	$t_menu_disabled =  '';
 	if( !$p_hide_checkbox ) {
 ?>
 		<tr>
@@ -1265,14 +1299,14 @@ function print_filter_do_filter_by_date( $p_hide_checkbox = false, array $p_filt
 					<input class="input-xs ace js_switch_date_inputs_trigger" type="checkbox" id="use_date_filters" class="input-xs"
 						name="<?php echo FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED ?>"
 						<?php check_checked( gpc_string_to_bool( $p_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] ), true ) ?> />
-                    <span class="lbl small"> <?php echo lang_get( 'use_date_filters' )?></span>
+					<span class="lbl padding-6 small"><?php echo lang_get( 'use_date_filters' )?></span>
 				</label>
 			</td>
 		</tr>
 <?php
 
 		if( ON != $p_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] ) {
-			$t_menu_readonly = ' readonly="readonly" ';
+			$t_menu_disabled = ' disabled="disabled" ';
 		}
 	}
 ?>
@@ -1283,14 +1317,26 @@ function print_filter_do_filter_by_date( $p_hide_checkbox = false, array $p_filt
 			<?php echo lang_get( 'start_date_label' )?>
 			</td>
 			<td class="nowrap">
-				<?php
-				echo '<input type="text" name="' . FILTER_PROPERTY_START_DATE_SUBMITTED . '" ' .
-					' class="datetimepicker input-xs" ' . $t_menu_readonly .
-					' data-picker-locale="' . lang_get_current_datetime_locale() . '"' .
-					' data-picker-format="' . convert_date_format_to_momentjs( config_get( 'normal_date_format' ) ) . '"' .
-					' size="16" maxlength="20" value="' . $p_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] . '" />';
-				echo '<i class="fa fa-calendar fa-xlg datetimepicker"></i>';
-				?>
+			<?php
+			$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+	foreach( $t_chars as $t_char ) {
+		if( strcasecmp( $t_char, 'M' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH, '"', $t_menu_disabled, '>';
+			print_month_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'D' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_DAY, '"', $t_menu_disabled, '>';
+			print_day_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR, '"', $t_menu_disabled, '>';
+			print_year_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] );
+			print "</select>\n";
+		}
+	}
+	?>
 			</td>
 		</tr>
 		<!-- End date -->
@@ -1299,14 +1345,26 @@ function print_filter_do_filter_by_date( $p_hide_checkbox = false, array $p_filt
 			<?php echo lang_get( 'end_date_label' )?>
 			</td>
 			<td>
-				<?php
-				echo '<input type="text" name="' . FILTER_PROPERTY_END_DATE_SUBMITTED . '" ' .
-					' class="datetimepicker input-xs" ' . $t_menu_readonly .
-					' data-picker-locale="' . lang_get_current_datetime_locale() . '"' .
-					' data-picker-format="' . convert_date_format_to_momentjs( config_get( 'normal_date_format' ) ) . '"' .
-					' size="16" maxlength="20" value="' . $p_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] . '" />';
-				echo '<i class="fa fa-calendar fa-xlg datetimepicker"></i>';
-				?>
+			<?php
+			$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+	foreach( $t_chars as $t_char ) {
+		if( strcasecmp( $t_char, 'M' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH, '"', $t_menu_disabled, '>';
+			print_month_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'D' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_DAY, '"', $t_menu_disabled, '>';
+			print_day_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR, '"', $t_menu_disabled, '>';
+			print_year_option_list( $p_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] );
+			print "</select>\n";
+		}
+	}
+	?>
 			</td>
 		</tr>
 		</table>
@@ -1322,12 +1380,47 @@ function print_filter_values_do_filter_by_last_updated_date( array $p_filter ) {
 	$t_filter = $p_filter;
 	if( 'on' == $t_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] ) {
 		echo '<input type="hidden" name="', FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] ), '" />';
-		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_START_DATE, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] ), '" />';
-		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_END_DATE, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_START_MONTH, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_START_DAY, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_START_YEAR, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_END_MONTH, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_END_DAY, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] ), '" />';
+		echo '<input type="hidden" name="', FILTER_PROPERTY_LAST_UPDATED_END_YEAR, '" value="', string_attribute( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] ), '" />';
 
-		echo $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE];
+		$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+		$t_time = mktime( 0, 0, 0, $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH], $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY], $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] );
+		foreach( $t_chars as $t_char ) {
+			if( strcasecmp( $t_char, 'M' ) == 0 ) {
+				echo ' ';
+				echo lang_get( 'month_' . strtolower (date( 'F', $t_time ) ) );
+			}
+			if( strcasecmp( $t_char, 'D' ) == 0 ) {
+				echo ' ';
+				echo date( 'd', $t_time );
+			}
+			if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+				echo ' ';
+				echo date( 'Y', $t_time );
+			}
+		}
+
 		echo ' - ';
-		echo $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE];
+
+		$t_time = mktime( 0, 0, 0, $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH], $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY], $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] );
+		foreach( $t_chars as $t_char ) {
+			if( strcasecmp( $t_char, 'M' ) == 0 ) {
+				echo ' ';
+				echo lang_get( 'month_' . strtolower ( date( 'F', $t_time ) ) );
+			}
+			if( strcasecmp( $t_char, 'D' ) == 0 ) {
+				echo ' ';
+				echo date( 'd', $t_time );
+			}
+			if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+				echo ' ';
+				echo date( 'Y', $t_time );
+			}
+		}
 	} else {
 		echo lang_get( 'no' );
 	}
@@ -1348,7 +1441,7 @@ function print_filter_do_filter_by_last_updated_date( $p_hide_checkbox = false, 
 ?>
 		<table cellspacing="0" cellpadding="0">
 <?php
-	$t_menu_readonly =  '';
+	$t_menu_disabled =  '';
 	if( !$p_hide_checkbox ) {
 ?>
 		<tr>
@@ -1358,14 +1451,14 @@ function print_filter_do_filter_by_last_updated_date( $p_hide_checkbox = false, 
 					<input class="input-xs ace js_switch_date_inputs_trigger" type="checkbox" id="use_last_updated_date_filters" class="input-xs"
 						name="<?php echo FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE ?>"
 						<?php check_checked( gpc_string_to_bool( $p_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] ), true ) ?> />
-                    <span class="lbl small"> <?php echo lang_get( 'use_last_updated_date_filters' )?></span>
+					<span class="lbl padding-6 small"><?php echo lang_get( 'use_last_updated_date_filters' )?></span>
 				</label>
 			</td>
 		</tr>
 <?php
 
 		if( ON != $p_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] ) {
-			$t_menu_readonly = ' readonly="readonly" ';
+			$t_menu_disabled = ' disabled="disabled" ';
 		}
 	}
 ?>
@@ -1376,14 +1469,26 @@ function print_filter_do_filter_by_last_updated_date( $p_hide_checkbox = false, 
 			<?php echo lang_get( 'start_date_label' )?>
 			</td>
 			<td class="nowrap">
-				<?php
-                echo '<input type="text" name="' . FILTER_PROPERTY_LAST_UPDATED_START_DATE . '" ' .
-                    ' class="datetimepicker input-xs" ' . $t_menu_readonly .
-                    ' data-picker-locale="' . lang_get_current_datetime_locale() . '"' .
-                    ' data-picker-format="' . convert_date_format_to_momentjs( config_get( 'normal_date_format' ) ) . '"' .
-                    ' size="16" maxlength="20" value="' . $p_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] . '" />';
-                echo '<i class="fa fa-calendar fa-xlg datetimepicker"></i>';
-	            ?>
+			<?php
+			$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+	foreach( $t_chars as $t_char ) {
+		if( strcasecmp( $t_char, 'M' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_START_MONTH, '"', $t_menu_disabled, '>';
+			print_month_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'D' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_START_DAY, '"', $t_menu_disabled, '>';
+			print_day_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_START_YEAR, '"', $t_menu_disabled, '>';
+			print_year_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] );
+			print "</select>\n";
+		}
+	}
+	?>
 			</td>
 		</tr>
 		<!-- End date -->
@@ -1392,14 +1497,26 @@ function print_filter_do_filter_by_last_updated_date( $p_hide_checkbox = false, 
 			<?php echo lang_get( 'end_date_label' )?>
 			</td>
 			<td>
-				<?php
-				echo '<input type="text" name="' . FILTER_PROPERTY_LAST_UPDATED_END_DATE . '" ' .
-					' class="datetimepicker input-xs" ' . $t_menu_readonly .
-					' data-picker-locale="' . lang_get_current_datetime_locale() . '"' .
-					' data-picker-format="' . convert_date_format_to_momentjs( config_get( 'normal_date_format' ) ) . '"' .
-					' size="16" maxlength="20" value="' . $p_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] . '" />';
-				echo '<i class="fa fa-calendar fa-xlg datetimepicker"></i>';
-				?>
+			<?php
+			$t_chars = preg_split( '//', config_get( 'short_date_format' ), -1, PREG_SPLIT_NO_EMPTY );
+	foreach( $t_chars as $t_char ) {
+		if( strcasecmp( $t_char, 'M' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_END_MONTH, '"', $t_menu_disabled, '>';
+			print_month_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'D' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_END_DAY, '"', $t_menu_disabled, '>';
+			print_day_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] );
+			print "</select>\n";
+		}
+		if( strcasecmp( $t_char, 'Y' ) == 0 ) {
+			echo '<select class="input-xs" name="', FILTER_PROPERTY_LAST_UPDATED_END_YEAR, '"', $t_menu_disabled, '>';
+			print_year_option_list( $p_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] );
+			print "</select>\n";
+		}
+	}
+	?>
 			</td>
 		</tr>
 		</table>
@@ -1467,7 +1584,7 @@ function print_filter_values_tag_string( array $p_filter ) {
  */
 function print_filter_tag_string( array $p_filter = null ) {
 	global $g_filter;
-	if( !access_has_global_level( config_get( 'tag_view_threshold' ) ) ) {
+	if( !access_has_project_level( config_get( 'tag_view_threshold' ) ) ) {
 		return;
 	}
 	if( null === $p_filter ) {
@@ -1811,7 +1928,8 @@ function print_filter_custom_field( $p_field_id, array $p_filter = null ) {
 				echo '>[' . lang_get( 'none' ) . ']</option>';
 			}
 			# Print possible values
-			$t_values = custom_field_distinct_values( $t_cfdef );
+			$t_included_projects = filter_get_included_projects( $p_filter );
+			$t_values = custom_field_distinct_values( $t_cfdef, $t_included_projects );
 			if( is_array( $t_values ) ){
 				$t_max_length = config_get( 'max_dropdown_length' );
 				foreach( $t_values as $t_val ) {
@@ -1955,7 +2073,8 @@ function print_filter_custom_field_date( $p_field_id, array $p_filter = null ) {
 		$p_filter = $g_filter;
 	}
 	$t_cfdef = custom_field_get_definition( $p_field_id );
-	$t_values = custom_field_distinct_values( $t_cfdef );
+	$t_included_projects = filter_get_included_projects( $p_filter );
+	$t_values = custom_field_distinct_values( $t_cfdef, $t_included_projects );
 
 	# Resort the values so there ordered numerically, they are sorted as strings otherwise which
 	# may be wrong for dates before early 2001.
@@ -2256,7 +2375,7 @@ function filter_form_draw_inputs( $p_filter, $p_for_screen = true, $p_static = f
 	$t_show_build = $t_show_product_version && ( config_get( 'enable_product_build' ) == ON );
 
 	# overload handler_id setting if user isn't supposed to see them (ref #6189)
-	if( !access_has_any_project( config_get( 'view_handler_threshold' ) ) ) {
+	if( !access_has_any_project_level( 'view_handler_threshold' ) ) {
 		$t_filter[FILTER_PROPERTY_HANDLER_ID] = array(
 			META_FILTER_ANY,
 		);
@@ -2476,7 +2595,7 @@ function filter_form_draw_inputs( $p_filter, $p_for_screen = true, $p_static = f
 			null /* class */,
 			'relationship_type_filter_target' /* content id */
 			));
-	if( access_has_global_level( config_get( 'tag_view_threshold' ) ) ) {
+	if( access_has_project_level( config_get( 'tag_view_threshold' ) ) ) {
 		$t_row3->add_item( new TableFieldsItem(
 				$get_field_header( 'tag_string_filter', lang_get( 'tags' ) ),
 				filter_form_get_input( $t_filter, 'tag_string', $t_show_inputs ),
@@ -2512,11 +2631,14 @@ function filter_form_draw_inputs( $p_filter, $p_for_screen = true, $p_static = f
 	}
 
 	if( ON == config_get( 'filter_by_custom_fields' ) ) {
-		$t_custom_fields = custom_field_get_linked_ids( $t_project_id );
+		$t_filter_included_projects = filter_get_included_projects( $t_filter );
+		$t_custom_fields = custom_field_get_linked_ids( $t_filter_included_projects );
 		$t_accessible_custom_fields = array();
 		foreach( $t_custom_fields as $t_cfid ) {
 			$t_cfdef = custom_field_get_definition( $t_cfid );
-			if( $t_cfdef['access_level_r'] <= current_user_get_access_level() && $t_cfdef['filter_by'] ) {
+			$t_projects_to_check = array_intersect( $t_filter_included_projects, custom_field_get_project_ids( $t_cfid ) );
+			if( $t_cfdef['filter_by']
+				&& access_has_any_project_level( (int)$t_cfdef['access_level_r'], $t_projects_to_check ) ) {
 				$t_accessible_custom_fields[] = $t_cfdef;
 			}
 		}

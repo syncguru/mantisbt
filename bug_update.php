@@ -110,7 +110,7 @@ $t_updated_bug->view_state = gpc_get_int( 'view_state', $t_existing_bug->view_st
 
 $t_bug_note = new BugNoteData();
 $t_bug_note->note = gpc_get_string( 'bugnote_text', '' );
-$t_bug_note->view_state = gpc_get_bool( 'private', config_get( 'default_bugnote_view_status' ) == VS_PRIVATE ) ? VS_PRIVATE : VS_PUBLIC;
+$t_bug_note->view_state = gpc_get_bool( 'private' ) ? VS_PRIVATE : VS_PUBLIC;
 $t_bug_note->time_tracking = gpc_get_string( 'time_tracking', '0:00' );
 
 if( $t_existing_bug->last_updated != $t_updated_bug->last_updated ) {
@@ -165,10 +165,11 @@ if ( !$t_reporter_reopening && !$t_reporter_closing ) {
 	}
 }
 
-# If resolving or closing, ensure that all dependant issues have been resolved.
+# If resolving or closing, ensure that all dependent issues have been resolved
+# unless config option enables closing parents with open children.
 if( ( $t_resolve_issue || $t_close_issue ) &&
-	!relationship_can_resolve_bug( $f_bug_id )
-) {
+	!relationship_can_resolve_bug( $f_bug_id ) &&
+	OFF == config_get( 'allow_parent_of_unresolved_to_close' ) ) {
 	trigger_error( ERROR_BUG_RESOLVE_DEPENDANTS_BLOCKING, ERROR );
 }
 
@@ -402,15 +403,6 @@ if( $t_bug_note->note || helper_duration_to_minutes( $t_bug_note->time_tracking 
 # Add a duplicate relationship if requested.
 if( $t_updated_bug->duplicate_id != 0 ) {
 	relationship_upsert( $f_bug_id, $t_updated_bug->duplicate_id, BUG_DUPLICATE, /* email_for_source */ false );
-
-	if( user_exists( $t_existing_bug->reporter_id ) ) {
-		bug_monitor( $f_bug_id, $t_existing_bug->reporter_id );
-	}
-
-	if( user_exists( $t_existing_bug->handler_id ) ) {
-		bug_monitor( $f_bug_id, $t_existing_bug->handler_id );
-	}
-
 	bug_monitor_copy( $f_bug_id, $t_updated_bug->duplicate_id );
 }
 

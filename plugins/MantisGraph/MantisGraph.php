@@ -18,6 +18,8 @@
  * @copyright Copyright 2002  MantisBT Team - mantisbt-dev@lists.sourceforge.net
  */
 
+require_once( __DIR__ . '/core/graph_api.php' );
+
 /**
  * Mantis Graph plugin
  */
@@ -56,6 +58,7 @@ class MantisGraphPlugin extends MantisPlugin  {
 	 */
 	function hooks() {
 		$t_hooks = array(
+			'EVENT_REST_API_ROUTES' => 'routes',
 			'EVENT_LAYOUT_RESOURCES' => 'resources',
 			'EVENT_CORE_HEADERS' => 'csp_headers',
 			'EVENT_SUBMENU_SUMMARY' => 'summary_submenu',
@@ -65,11 +68,38 @@ class MantisGraphPlugin extends MantisPlugin  {
 	}
 
 	/**
+	 * Add the RESTful routes that are handled by this plugin.
+	 *
+	 * @param $p_event_name The event name
+	 * @param $p_event_args The event arguments
+	 * @return void
+	 */
+	function routes( $p_event_name, $p_event_args ) {
+		$t_app = $p_event_args['app'];
+		$t_app->group( plugin_route_group(), function() use ( $t_app ) {
+			$t_app->get( '/reporters', function( $req, $res, $args ) {
+				if( access_has_project_level( config_get( 'view_summary_threshold' ) ) ) {
+					$t_report_associative = create_reporter_summary();
+					$t_report = array();
+
+					foreach( $t_report_associative as $t_name => $t_count ) {
+						$t_report[] = array( "name" => $t_name, "count" => $t_count );
+					}
+
+					return $res->withStatus( HTTP_STATUS_SUCCESS )->withJson( $t_report );
+				}
+
+				return $res->withStatus( HTTP_STATUS_FORBIDDEN );
+			} );
+		} );
+	}
+
+	/**
 	 * Add Content-Security-Policy directives that are needed to load scripts for CDN.
 	 * @return void
 	 */
 	function csp_headers() {
-		if ( config_get_global( 'cdn_enabled' ) == ON ) {
+		if( config_get_global( 'cdn_enabled' ) == ON ) {
 			http_csp_add( 'script-src', 'https://cdnjs.cloudflare.com' );
 		}
 	}
@@ -92,14 +122,16 @@ class MantisGraphPlugin extends MantisPlugin  {
 	 * @return void
 	 */
 	function resources() {
-		if ( config_get_global( 'cdn_enabled' ) == ON ) {
-			html_javascript_cdn_link( 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/' . CHARTJS_VERSION . '/Chart.min.js', CHARTJS_HASH );
-			html_javascript_cdn_link( 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/' . CHARTJS_VERSION . '/Chart.bundle.min.js', CHARTJSBUNDLE_HASH );
-		} else {
-			echo '<script src="' . plugin_file( 'chart-' . CHARTJS_VERSION . '.min.js' ) . '"></script>';
-			echo '<script src="' . plugin_file( 'chart.bundle-' . CHARTJS_VERSION . '.min.js' ) . '"></script>';
+		if( current( explode( '/', gpc_get_string( 'page', '' ) ) ) === $this->basename ) {
+			if( config_get_global( 'cdn_enabled' ) == ON ) {
+				html_javascript_cdn_link('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/' . CHARTJS_VERSION . '/Chart.min.js', CHARTJS_HASH);
+				html_javascript_cdn_link('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/' . CHARTJS_VERSION . '/Chart.bundle.min.js', CHARTJSBUNDLE_HASH);
+			} else {
+				echo '<script src="' . plugin_file('chart-' . CHARTJS_VERSION . '.min.js') . '"></script>';
+				echo '<script src="' . plugin_file('chart.bundle-' . CHARTJS_VERSION . '.min.js') . '"></script>';
+			}
+			echo '<script src="' . plugin_file("MantisGraph.js") . '"></script>';
 		}
-		echo '<script src="' . plugin_file( "MantisGraph.js" ) . '"></script>';
 	}
 
 	/**

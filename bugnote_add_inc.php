@@ -62,13 +62,13 @@ require_api( 'lang_api.php' );
 	$t_collapse_block = is_collapsed( 'bugnote_add' );
 	$t_block_css = $t_collapse_block ? 'collapsed' : '';
 	$t_block_icon = $t_collapse_block ? 'fa-chevron-down' : 'fa-chevron-up';
+	$t_allow_file_upload = file_allow_bug_upload( $f_bug_id );
 ?>
 <form id="bugnoteadd"
 	method="post"
 	action="bugnote_add.php"
 	enctype="multipart/form-data"
-	class="dz dropzone-form"
-	<?php print_dropzone_form_data() ?>>
+	>
 	<?php echo form_security_field( 'bugnote_add' ) ?>
 	<input type="hidden" name="bug_id" value="<?php echo $f_bug_id ?>" />
 	<div id="bugnote_add" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
@@ -93,6 +93,9 @@ require_api( 'lang_api.php' );
 
 <?php
 	$t_default_bugnote_view_status = config_get( 'default_bugnote_view_status' );
+	$t_bugnote_private = $t_default_bugnote_view_status == VS_PRIVATE;
+	$t_bugnote_class = $t_bugnote_private ? 'form-control bugnote-private' : 'form-control';
+
 	if( access_has_bug_level( config_get( 'set_view_status_threshold' ), $f_bug_id ) ) {
 ?>
 			<tr>
@@ -102,7 +105,7 @@ require_api( 'lang_api.php' );
 				<td>
 				<label for="bugnote_add_view_status">
 					<input type="checkbox" class="ace" id="bugnote_add_view_status" name="private" <?php check_checked( $t_default_bugnote_view_status, VS_PRIVATE ); ?> />
-					<span class="lbl"> <?php echo lang_get( 'private' ) ?> </span>
+					<span class="lbl padding-6"><?php echo lang_get( 'private' ) ?></span>
 				</label>
 				</td>
 			</tr>
@@ -113,10 +116,9 @@ require_api( 'lang_api.php' );
 					<?php echo lang_get( 'bugnote' ) ?>
 				</th>
 				<td width="85%">
-					<textarea name="bugnote_text" id="bugnote_text" class="form-control" rows="7"></textarea>
+					<textarea name="bugnote_text" id="bugnote_text" class="<?php echo $t_bugnote_class ?>" rows="7"></textarea>
 				</td>
 			</tr>
-
 
 <?php
 	if( config_get( 'time_tracking_enabled' ) ) {
@@ -140,7 +142,7 @@ require_api( 'lang_api.php' );
 		}
 	}
 
-	if( file_allow_bug_upload( $f_bug_id ) ) {
+	if( $t_allow_file_upload ) {
 		$t_file_upload_max_num = max( 1, config_get( 'file_upload_max_num' ) );
 		$t_max_file_size = (int)min( ini_get_number( 'upload_max_filesize' ), ini_get_number( 'post_max_size' ), config_get( 'max_file_size' ) );
 
@@ -154,7 +156,7 @@ require_api( 'lang_api.php' );
 				</th>
 				<td>
 					<input type="hidden" name="max_file_size" value="<?php echo $t_max_file_size ?>" />
-					<div class="dropzone center">
+					<div class="dropzone center" <?php print_dropzone_form_data() ?>>
 						<i class="upload-icon ace-icon fa fa-cloud-upload blue fa-3x"></i><br>
 						<span class="bigger-150 grey"><?php echo lang_get( 'dropzone_default_message' ) ?></span>
 						<div id="dropzone-previews-box" class="dz dropzone-previews dz-max-files-reached"></div>

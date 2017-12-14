@@ -200,8 +200,7 @@ function columns_get_custom_fields() {
 	$t_all_cfids = custom_field_get_ids();
 	$t_col_names = array();
 	foreach( $t_all_cfids as $t_id ) {
-		$t_def = custom_field_get_definition( $t_id );
-		$t_col_names[] = 'custom_' . $t_def['name'];
+		$t_col_names[] = column_get_custom_field_column_name( $t_id );
 	}
 	return $t_col_names;
 }
@@ -253,15 +252,15 @@ function columns_get_all( $p_project_id = null ) {
 	} else {
 		$t_project_id = $p_project_id;
 	}
-
-	$t_related_custom_field_ids = custom_field_get_linked_ids( $t_project_id );
+	# Get custom fields from this project and sub-projects
+	$t_projects = user_get_all_accessible_projects( null, $t_project_id );
+	$t_related_custom_field_ids = custom_field_get_linked_ids( $t_projects );
 	foreach( $t_related_custom_field_ids as $t_id ) {
-		if( !custom_field_has_read_access_by_project_id( $t_id, $t_project_id ) ) {
-			continue;
+		$t_cfdef = custom_field_get_definition( $t_id );
+		$t_projects_to_check = array_intersect( $t_projects, custom_field_get_project_ids( $t_id ) );
+		if( access_has_any_project_level( (int)$t_cfdef['access_level_r'], $t_projects_to_check ) ) {
+			$t_columns[] = column_get_custom_field_column_name( $t_id );
 		}
-
-		$t_def = custom_field_get_definition( $t_id );
-		$t_columns[] = 'custom_' . $t_def['name'];
 	}
 
 	return $t_columns;
@@ -348,6 +347,21 @@ function column_get_custom_field_name( $p_column ) {
 	}
 
 	return null;
+}
+
+/**
+ * Returns the name of a column corresponding to a custom field, providing the id as parameter.
+ *
+ * @param integer $p_cf_id	Custom field id
+ * @return string	The column name
+ */
+function column_get_custom_field_column_name( $p_cf_id ) {
+	$t_def = custom_field_get_definition( $p_cf_id );
+	if( $t_def ) {
+		return 'custom_' . $t_def['name'];
+	} else {
+		return null;
+	}
 }
 
 /**
@@ -1065,7 +1079,8 @@ function print_column_selection( BugData $p_bug, $p_columns_target = COLUMNS_TAR
 	global $g_checkboxes_exist;
 
 	echo '<td class="column-selection">';
-	if( access_has_any_project( config_get( 'report_bug_threshold', null, null, $p_bug->project_id ) ) ||
+	if( # check report_bug_threshold for the actions "copy" or "move" into any other project
+		access_has_any_project_level( 'report_bug_threshold' ) ||
 		# !TODO: check if any other projects actually exist for the bug to be moved to
 		access_has_project_level( config_get( 'move_bug_threshold', null, null, $p_bug->project_id ), $p_bug->project_id ) ||
 		# !TODO: factor in $g_auto_set_status_to_assigned == ON
@@ -1372,18 +1387,21 @@ function print_column_resolution( BugData $p_bug, $p_columns_target = COLUMNS_TA
  * @access public
  */
 function print_column_status( BugData $p_bug, $p_columns_target = COLUMNS_TARGET_VIEW_PAGE ) {
+	$t_current_user = auth_get_current_user_id();
 	# choose color based on status
-	$status_label = html_get_status_css_class( $p_bug->status, auth_get_current_user_id(), $p_bug->project_id );
+	$status_label = html_get_status_css_class( $p_bug->status, $t_current_user, $p_bug->project_id );
 	echo '<td class="column-status">';
 	echo '<div class="align-left">';
 	echo '<i class="fa fa-square fa-status-box ' . $status_label . '"></i> ';
 	printf( '<span title="%s">%s</span>',
-		get_enum_element( 'resolution', $p_bug->resolution, auth_get_current_user_id(), $p_bug->project_id ),
-		get_enum_element( 'status', $p_bug->status, auth_get_current_user_id(), $p_bug->project_id )
+		get_enum_element( 'resolution', $p_bug->resolution, $t_current_user, $p_bug->project_id ),
+		get_enum_element( 'status', $p_bug->status, $t_current_user, $p_bug->project_id )
 	);
 
-	# print username instead of status
-	if( ( ON == config_get( 'show_assigned_names' ) ) && ( $p_bug->handler_id > 0 ) && ( access_has_project_level( config_get( 'view_handler_threshold' ), $p_bug->project_id ) ) ) {
+	# print handler user next to status
+	if( $p_bug->handler_id > 0
+			&& ON == config_get( 'show_assigned_names', null, $t_current_user, $p_bug->project_id )
+			&& access_can_see_handler_for_bug( $p_bug ) ) {
 		printf( ' (%s)', prepare_user_name( $p_bug->handler_id ) );
 	}
 	echo '</div></td>';
@@ -1598,7 +1616,7 @@ function print_column_view_state( BugData $p_bug, $p_columns_target = COLUMNS_TA
  * @access public
  */
 function print_column_tags( BugData $p_bug, $p_columns_target = COLUMNS_TARGET_VIEW_PAGE ) {
-	echo '<td class="column-view-state">';
+	echo '<td class="column-tags">';
 
 	if( access_has_bug_level( config_get( 'tag_view_threshold' ), $p_bug->id ) ) {
 		echo string_display_line( tag_bug_get_all( $p_bug->id ) );

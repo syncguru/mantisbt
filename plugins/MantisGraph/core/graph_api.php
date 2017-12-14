@@ -169,7 +169,7 @@ function graph_pie( array $p_metrics, $p_title = '' ) {
 	$t_js_values = graph_numeric_array( $t_values );
 
 	$t_colors = graph_status_colors_to_colors();
-	$t_background_colors = graph_colors_to_rgbas( $t_colors, 0.2 );
+	$t_background_colors = graph_colors_to_rgbas( $t_colors, 1.0 );
 	$t_border_colors = graph_colors_to_rgbas( $t_colors, 1 );
 ?>
 	<canvas id="piechart<?php echo $s_id ?>" width="500" height="400"
@@ -420,7 +420,7 @@ function create_category_summary() {
 
 /**
  * Create cumulative graph by date
- * @return array
+ * @return array | null
  */
 function create_cumulative_bydate() {
 	$t_clo_val = config_get( 'bug_closed_status_threshold' );
@@ -497,6 +497,9 @@ function create_cumulative_bydate() {
 		$t_last_date = $t_date;
 	}
 
+	if ( $t_last_id == 0 ) {
+		return null;
+	}
 	ksort( $t_calc_metrics );
 
 	$t_last_opened = 0;

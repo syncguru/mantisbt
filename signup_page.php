@@ -49,8 +49,8 @@ require_css( 'login.css' );
 require_js( 'login.js' );
 
 # Check for invalid access to signup page
-if( OFF == config_get_global( 'allow_signup' ) || LDAP == config_get_global( 'login_method' ) ) {
-	print_header_redirect( 'login_page.php' );
+if( !auth_signup_enabled() || LDAP == config_get_global( 'login_method' ) ) {
+	print_header_redirect( auth_login_page() );
 }
 
 # signup page shouldn't be indexed by search engines
@@ -64,11 +64,7 @@ $t_public_key = crypto_generate_uri_safe_nonce( 64 );
 <div class="col-md-offset-3 col-md-6 col-sm-10 col-sm-offset-1">
     <div class="login-container">
 	<div class="space-12 hidden-480"></div>
-	<a href="<?php echo config_get( 'logo_url' ) ?>">
-		<h1 class="center white">
-			<img src="<?php echo helper_mantis_url( config_get( 'logo_image' ) ); ?>">
-		</h1>
-	</a>
+	<?php layout_login_page_logo() ?>
 	<div class="space-24 hidden-480"></div>
 
 	<div class="position-relative">
@@ -107,7 +103,7 @@ $t_public_key = crypto_generate_uri_safe_nonce( 64 );
 
 	# captcha image requires GD library and related option to ON
 	if( ON == config_get( 'signup_use_captcha' ) && get_gd_version() > 0 && $t_allow_passwd_change ) {
-		$t_securimage_path = 'library/securimage';
+		$t_securimage_path = 'vendor/dapphp/securimage';
 		$t_securimage_show = $t_securimage_path . '/securimage_show.php';
 		$t_securimage_play = $t_securimage_path . '/securimage_play.swf?'
 			. http_build_query( array(
@@ -141,10 +137,11 @@ $t_public_key = crypto_generate_uri_safe_nonce( 64 );
 
 <?php
 			}
+
 			if( !$t_allow_passwd_change ) {
 				echo '<div class="space-10"></div>';
 				echo '<div class="alert alert-danger">';
-				echo lang_get( 'no_password_request' );
+				echo lang_get( 'no_password_change' );;
 				echo '</div>';
 			}
 ?>
@@ -160,7 +157,7 @@ $t_public_key = crypto_generate_uri_safe_nonce( 64 );
 </div>
 
 	<div class="toolbar center">
-		<a class="back-to-login-link pull-left" href="login_page.php"><?php echo lang_get( 'login_link' ); ?></a>
+		<a class="back-to-login-link pull-left" href="<?php echo AUTH_PAGE_USERNAME; ?>"><?php echo lang_get( 'login_link' ); ?></a>
 		<?php
 		# lost password feature disabled or reset password via email disabled
 		if( ( LDAP != config_get_global( 'login_method' ) ) &&

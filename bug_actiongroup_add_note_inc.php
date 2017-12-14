@@ -38,6 +38,10 @@ if( !defined( 'BUG_ACTIONGROUP_INC_ALLOW' ) ) {
 	return;
 }
 
+# This variable is defined in parent script
+global $t_event_params;
+$t_event_params['has_bugnote'] = true;
+
 require_api( 'access_api.php' );
 require_api( 'bug_api.php' );
 require_api( 'config_api.php' );
@@ -71,7 +75,7 @@ function action_add_note_print_fields() {
 			<?php echo lang_get( 'add_bugnote_title' ); ?>
 		</th>
 		<td>
-			<textarea class="form-control" name="bugnote_text" cols="80" rows="10"></textarea>
+			<textarea class="form-control" name="bugnote_text" id="bugnote_text" cols="80" rows="10"></textarea>
 		</td>
 	</tr>
 

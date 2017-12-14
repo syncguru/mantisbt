@@ -250,8 +250,8 @@ function string_url( $p_string ) {
 function string_sanitize_url( $p_url, $p_return_absolute = false ) {
 	$t_url = strip_tags( urldecode( $p_url ) );
 
-	$t_path = rtrim( config_get( 'path' ), '/' );
-	$t_short_path = rtrim( config_get( 'short_path' ), '/' );
+	$t_path = rtrim( config_get_global( 'path' ), '/' );
+	$t_short_path = rtrim( config_get_global( 'short_path' ), '/' );
 
 	$t_pattern = '(?:/*(?P<script>[^\?#]*))(?:\?(?P<query>[^#]*))?(?:#(?P<anchor>[^#]*))?';
 
@@ -275,7 +275,9 @@ function string_sanitize_url( $p_url, $p_return_absolute = false ) {
 	}
 
 	# Start extracting regex matches
-	$t_script = $t_matches['script'];
+	# Encode backslashes to prevent unwanted escaping of a leading '/' allowing
+	# redirection to external sites
+	$t_script = strtr( $t_matches['script'], array( '\\' => '%5C' ) );
 	$t_script_path = $t_matches['path'];
 
 	# Clean/encode query params
@@ -324,7 +326,7 @@ function string_sanitize_url( $p_url, $p_return_absolute = false ) {
  * the URL
  *
  * The bug tag ('#' by default) must be at the beginning of the string or
- * preceeded by a character that is not a letter, a number or an underscore
+ * preceded by a character that is not a letter, a number or an underscore
  *
  * if $p_include_anchor = false, $p_fqdn is ignored and assumed to true.
  * @param string  $p_string         String to be processed.
@@ -394,7 +396,7 @@ function string_process_bug_link( $p_string, $p_include_anchor = true, $p_detail
  * the URL
  *
  * The bugnote tag ('~' by default) must be at the beginning of the string or
- * preceeded by a character that is not a letter, a number or an underscore
+ * preceded by a character that is not a letter, a number or an underscore
  *
  * if $p_include_anchor = false, $p_fqdn is ignored and assumed to true.
  * @param string  $p_string         String to be processed.
@@ -470,7 +472,7 @@ function string_process_bugnote_link( $p_string, $p_include_anchor = true, $p_de
 
 /**
  * Search email addresses and URLs for a few common protocols in the given
- * string, and replace occurences with href anchors.
+ * string, and replace occurrences with href anchors.
  * @param string $p_string String to be processed.
  * @return string
  */
@@ -589,7 +591,7 @@ function string_restore_valid_html_tags( $p_string, $p_multiline = true ) {
 	global $g_cache_html_valid_tags_single_line, $g_cache_html_valid_tags;
 
 	if( is_blank( ( $p_multiline ? $g_cache_html_valid_tags : $g_cache_html_valid_tags_single_line ) ) ) {
-		$t_html_valid_tags = config_get( $p_multiline ? 'html_valid_tags' : 'html_valid_tags_single_line' );
+		$t_html_valid_tags = config_get_global( $p_multiline ? 'html_valid_tags' : 'html_valid_tags_single_line' );
 
 		if( OFF === $t_html_valid_tags || is_blank( $t_html_valid_tags ) ) {
 			return $p_string;
@@ -735,7 +737,7 @@ function string_get_bugnote_view_url( $p_bug_id, $p_bugnote_id ) {
  * @return string
  */
 function string_get_bugnote_view_url_with_fqdn( $p_bug_id, $p_bugnote_id ) {
-	return config_get( 'path' ) . string_get_bug_view_url( $p_bug_id ) . '#c' . $p_bugnote_id;
+	return config_get_global( 'path' ) . string_get_bug_view_url( $p_bug_id ) . '#c' . $p_bugnote_id;
 }
 
 /**
@@ -746,7 +748,7 @@ function string_get_bugnote_view_url_with_fqdn( $p_bug_id, $p_bugnote_id ) {
  * @return string
  */
 function string_get_bug_view_url_with_fqdn( $p_bug_id ) {
-	return config_get( 'path' ) . string_get_bug_view_url( $p_bug_id );
+	return config_get_global( 'path' ) . string_get_bug_view_url( $p_bug_id );
 }
 
 /**
@@ -799,7 +801,7 @@ function string_get_bug_report_url() {
  * @return string
  */
 function string_get_confirm_hash_url( $p_user_id, $p_confirm_hash ) {
-	$t_path = config_get( 'path' );
+	$t_path = config_get_global( 'path' );
 	return $t_path . 'verify.php?id=' . string_url( $p_user_id ) . '&confirm_hash=' . string_url( $p_confirm_hash );
 }
 

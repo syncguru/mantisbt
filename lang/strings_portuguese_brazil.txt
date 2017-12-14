@@ -44,10 +44,12 @@
  * @author Eduardo.mps
  * @author Elival
  * @author Fasouzafreitas
+ * @author Felipe L. Ewald
  * @author Giro720
  * @author Gusta
  * @author Jefersonfoliveira
  * @author Joao Xavier
+ * @author Lowvy
  * @author Luckas
  * @author LucyDiniz
  * @author Luigipiccoli
@@ -97,6 +99,8 @@ $s_excel_export = 'Exportação para Excel';
 $s_login_anonymously = 'Acesso anônimo';
 $s_anonymous = 'Anônimo';
 $s_jump_to_bugnotes = 'Ir para as Anotações';
+$s_jump_to_history = 'Ir para o Histórico';
+$s_display_history = 'Exibir histórico';
 $s_public_project_msg = 'Este projeto é PÚBLICO.  Todos os usuários tem acesso.';
 $s_private_project_msg = 'Este projeto é PRIVADO.  Somente administradores e usuários adicionados manualmente tem acesso.';
 $s_access_level_project = 'Nível de Acesso ao Projeto';
@@ -524,12 +528,12 @@ $s_warning_change_setting = '<strong>Aviso:</strong> "%1$s" não está definido 
 $s_warning_security_hazard = 'Este é um risco de segurança em potencial, pois ele pode expor informações confidenciais.';
 $s_warning_integrity_hazard = 'Isto fará com que MantisBT para continuar quando ocorre erros e pode levar a problemas de integridade de sistema/dados.';
 $s_warning_debug_email = '<strong>Aviso:</strong> "<code>debug_email</code>" não está definido para <code>OFF</code>, todos os e-mails de notificação será enviada para "%1$s".';
-$s_error_database_no_schema_version = '<strong>Error:</strong> A estrutura do banco de dados parece estar desatualizado (config(databaseversion) is 0) ou corrompido. Por favor verifique se o seu banco de dados está sendo executado - não podemos recuperar a versão do esquema do banco de dados. Tabela de configuração não retornou uma versão do esquema do banco de dados válida - por favor, pedir apoio na lista de discussão mantis-ajuda, se necessário.';
+$s_error_database_no_schema_version = '<strong>Ero:</strong> Sua versão do esquema do banco de dados é 0. Isso pode acontecer porque o banco de dados está corrompido ou o valor de "database_version" não pode ser recuperado da tabela de configuração ou a estrutura do banco de dados é de uma versão desatualizada do MantisBT (pré 1.0.0).';
 $s_error_database_version_out_of_date_2 = '<strong>AVISO:</strong> A estrutura da base de dados pode estar desatualizada. Por favor atualize <a href="admin/install.php">aqui</a> antes de entrar.';
 $s_error_code_version_out_of_date = '<strong>AVISO:</strong> A estrutura da base de dados está mais atualizada que o código instalado. Por favor atualize o código.';
 $s_login_page_info = 'Bem-vindo ao Gerenciador de Tarefas.';
 $s_login_title = 'Entrar';
-$s_save_login = 'Recordar os meus dados neste computador';
+$s_save_login = 'Mantenha-me conectado(a)';
 $s_secure_session = 'Sessão Segura';
 $s_secure_session_long = 'Somente permitir que sua sessão seja utilizada a partir deste endereço IP.';
 $s_choose_project = 'Escolher Projeto';
@@ -537,6 +541,7 @@ $s_login_button = 'Entrar';
 $s_signup_link = 'criar uma nova conta';
 $s_lost_password_link = 'Perdeu a sua senha?';
 $s_username_or_email = 'Usuário ou endereço de e-mail';
+$s_enter_password = 'Digite a senha para \'%s\'';
 $s_select_project_button = 'Selecionar Projeto';
 $s_lost_password_title = 'Reajuste de Senha';
 $s_lost_password_done_title = 'Mensagem de Senha Enviada';
@@ -606,6 +611,7 @@ $s_issue_reporter = 'Usuário que criou a tarefa';
 $s_issue_handler = 'Usuário que está tratando a tarefa';
 $s_users_added_bugnote = 'Usuários que adicionaram anotações';
 $s_category_assigned_to = 'Categoria Proprietário';
+$s_email_notify_users = 'Qualquer usuário com nível de acesso';
 $s_change_configuration = 'Atualizar Configuração';
 $s_message = 'Mensagem';
 $s_default_notify = 'Ajustando opções de notificação padrão para';
@@ -636,6 +642,7 @@ $s_desc_bug_closed_status_threshold = 'Status no qual uma tarefa é considerada 
 $s_workflow_change_access_label = 'Quem pode alterar o fluxo de trabalho:';
 $s_access_change_access_label = 'Quem pode alterar os níveis de acesso:';
 $s_default_not_in_flow = 'O status padrão de %1$s não está selecionado nos próximos status de %2$s. Este será ignorado';
+$s_allowed_access_levels = 'Permitido para qualquer usuário com nível de acesso';
 $s_assign_issue = 'Atribuir uma tarefa';
 $s_allow_reporter_close = 'Permitir ao relator fechar a tarefa';
 $s_allow_reporter_reopen = 'Permitir ao relator reabrir a tarefa';
@@ -752,7 +759,7 @@ $s_version_updated_msg = 'A versão foi atualizada com sucesso...';
 $s_account_delete_protected_msg = 'Conta protegida. Não se pode apagar esta conta.';
 $s_account_deleted_msg = 'Conta apagada...';
 $s_delete_account_sure_msg = 'Você tem certeza que deseja apagar esta conta?';
-$s_notify_user = 'Notificar Usuário';
+$s_notify_user = 'Notificar o usuário dessa mudança';
 $s_accounts_pruned_msg = 'Todas as contas que nunca foram acessadas e foram criadas há mais do que uma semana foram removidas';
 $s_prune_accounts_button = 'Apagar contas velhas';
 $s_confirm_account_pruning = 'Você tem certeza que deseja apagar as contas velhas que nunca foram acessadas?';
@@ -1039,6 +1046,7 @@ $s_kb = 'kB';
 $s_attachment_missing = 'Anexo em falta';
 $s_attachment_count = 'Contagem de anexos';
 $s_view_attachments_for_issue = 'Ver %1$d anexo(s) do problema #%2$d';
+$s_warning_update_custom_field_type = '<strong>Aviso:</strong> O campo personalizado "%1$s" já possui valores armazenados. Alterar o tipo de campo pode causar erros e comportamento inesperado se os valores existentes não forem consistentes com o novo tipo do campo. Para prosseguir, clique no botão abaixo';
 $s_phpmailer_language = 'br';
 $s_sponsors = '%1$d patrocinador(es)';
 $s_sponsorship_added = 'Patrocínio Adicionado';
@@ -1219,11 +1227,13 @@ $s_overdue_since = 'Atrasado desde %1$s';
 $s_view_account_title = 'Informação do Usuário';
 $s_manage_user = 'Gerenciar Usuário';
 $s_install_information = 'Informação de Instalação do MantisBT';
-$s_database_information = 'Informação de Base de Dados do MantisBT';
+$s_database_information = 'Informação do banco de dados MantisBT';
 $s_path_information = 'Informação de Caminho do MantisBT';
 $s_mantisbt_database_statistics = 'Estatísticas do banco de dados MantisBT';
 $s_php_version = 'Versão PHP';
 $s_adodb_version = 'Versão ADOdb';
+$s_database_driver = 'Controlador de base de dados';
+$s_database_version_description = 'Versão do banco de dados, descrição';
 $s_month_january = 'Janeiro';
 $s_month_february = 'Fevereiro';
 $s_month_march = 'Março';

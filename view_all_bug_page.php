@@ -82,7 +82,7 @@ for( $i=0; $i < $t_row_count; $i++ ) {
 	$t_project_id = $t_rows[$i]->project_id;
 	$t_unique_project_ids[$t_project_id] = $t_project_id;
 }
-gpc_set_cookie( config_get( 'bug_list_cookie' ), implode( ',', $t_bugslist ) );
+gpc_set_cookie( config_get_global( 'bug_list_cookie' ), implode( ',', $t_bugslist ) );
 
 compress_enable();
 
@@ -91,7 +91,8 @@ html_robots_noindex();
 
 layout_page_header_begin( lang_get( 'view_bugs_link' ) );
 
-if( current_user_get_pref( 'refresh_delay' ) > 0 ) {
+$t_refresh_delay = current_user_get_pref( 'refresh_delay' );
+if( $t_refresh_delay > 0 ) {
 	$t_query = '?';
 
 	if( $f_page_number > 1 )  {
@@ -100,7 +101,7 @@ if( current_user_get_pref( 'refresh_delay' ) > 0 ) {
 
 	$t_query .= 'refresh=true';
 
-	html_meta_redirect( 'view_all_bug_page.php' . $t_query, current_user_get_pref( 'refresh_delay' ) * 60 );
+	html_meta_redirect( 'view_all_bug_page.php' . $t_query, $t_refresh_delay * 60 );
 }
 
 layout_page_header_end();

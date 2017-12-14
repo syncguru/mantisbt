@@ -245,12 +245,28 @@ function filter_get_url( array $p_custom_filter ) {
 			$p_custom_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] ? 'on' : 'off' );
 
 		# The start and end dates are only applicable if filter by date is set.
-		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] ) ) {
-			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_START_DATE_SUBMITTED, $p_custom_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] );
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_START_DAY, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] );
 		}
 
-		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] ) ) {
-			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_END_DATE_SUBMITTED, $p_custom_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] );
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_END_DAY, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR, $p_custom_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] );
 		}
 	}
 
@@ -260,12 +276,28 @@ function filter_get_url( array $p_custom_filter ) {
 			$p_custom_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] ? 'on' : 'off' );
 
 		# The start and end dates are only applicable if filter by date is set.
-		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] ) ) {
-			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_START_DATE, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] );
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_START_DAY, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] );
 		}
 
-		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] ) ) {
-			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_END_DATE, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] );
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_END_DAY, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_START_MONTH, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_END_MONTH, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_START_YEAR, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] );
+		}
+
+		if( !filter_field_is_any( $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] ) ) {
+			$t_query[] = filter_encode_field_and_value( FILTER_PROPERTY_LAST_UPDATED_END_YEAR, $p_custom_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] );
 		}
 	}
 
@@ -319,7 +351,7 @@ function filter_get_url( array $p_custom_filter ) {
 
 	if( count( $t_query ) > 0 ) {
 		$t_query_str = implode( $t_query, '&' );
-		$t_url = config_get( 'path' ) . 'search.php?' . $t_query_str;
+		$t_url = config_get_global( 'path' ) . 'search.php?' . $t_query_str;
 	} else {
 		$t_url = '';
 	}
@@ -542,7 +574,7 @@ function filter_ensure_valid_filter( array $p_filter_arr ) {
 
 	$t_sort_fields = explode( ',', $p_filter_arr[FILTER_PROPERTY_SORT_FIELD_NAME] );
 	$t_dir_fields = explode( ',', $p_filter_arr[FILTER_PROPERTY_SORT_DIRECTION] );
-	# both arrays should be equal lenght, just in case
+	# both arrays should be equal length, just in case
 	$t_sort_fields_count = min( count( $t_sort_fields ), count( $t_dir_fields ) );
 
 	# clean up sort fields, remove invalid columns
@@ -586,8 +618,45 @@ function filter_ensure_valid_filter( array $p_filter_arr ) {
 		$p_filter_arr[FILTER_PROPERTY_SORT_DIRECTION] = filter_get_default_property( FILTER_PROPERTY_SORT_DIRECTION, $t_view_type );
 	}
 
-	# validate or filter junk from other fields
-	$t_multi_select_list = array(
+	# Validate types for values.
+
+	# helper function to validate types
+	$t_function_validate_type = function( $p_value, $p_type ) {
+		$t_value = stripslashes( $p_value );
+		if( ( $t_value === 'any' ) || ( $t_value === '[any]' ) ) {
+			$t_value = META_FILTER_ANY;
+		}
+		if( ( $t_value === 'none' ) || ( $t_value === '[none]' ) ) {
+			$t_value = META_FILTER_NONE;
+		}
+		# Ensure the filter property has the right type - see #20087
+		switch( $p_type ) {
+			case 'string' :
+			case 'int' :
+				settype( $t_value, $p_type );
+				break;
+		}
+		return $t_value;
+	};
+
+	# Validate properties that must not be arrays
+	$t_single_value_list = array(
+		FILTER_PROPERTY_VIEW_STATE => 'int',
+	);
+	foreach( $t_single_value_list as $t_field_name => $t_field_type ) {
+		$t_value = $p_filter_arr[$t_field_name];
+		if( is_array( $t_value ) ) {
+			if( count( $t_value ) > 0 ) {
+				$p_filter_arr[$t_field_name] = reset( $t_value );
+			} else {
+				$p_filter_arr[$t_field_name] = filter_get_default_property( $t_field_name, $t_view_type );
+			}
+		}
+		$p_filter_arr[$t_field_name] = $t_function_validate_type( $p_filter_arr[$t_field_name], $t_field_type );
+	}
+
+	# Validate properties that must be arrays, and the type of its elements
+	$t_array_values_list = array(
 		FILTER_PROPERTY_CATEGORY_ID => 'string',
 		FILTER_PROPERTY_SEVERITY => 'int',
 		FILTER_PROPERTY_STATUS => 'int',
@@ -608,7 +677,7 @@ function filter_ensure_valid_filter( array $p_filter_arr ) {
 		FILTER_PROPERTY_OS_BUILD => 'string',
 		FILTER_PROPERTY_PROJECT_ID => 'int'
 	);
-	foreach( $t_multi_select_list as $t_multi_field_name => $t_multi_field_type ) {
+	foreach( $t_array_values_list as $t_multi_field_name => $t_multi_field_type ) {
 		if( !is_array( $p_filter_arr[$t_multi_field_name] ) ) {
 			$p_filter_arr[$t_multi_field_name] = array(
 				$p_filter_arr[$t_multi_field_name],
@@ -616,21 +685,7 @@ function filter_ensure_valid_filter( array $p_filter_arr ) {
 		}
 		$t_checked_array = array();
 		foreach( $p_filter_arr[$t_multi_field_name] as $t_filter_value ) {
-			$t_filter_value = stripslashes( $t_filter_value );
-			if( ( $t_filter_value === 'any' ) || ( $t_filter_value === '[any]' ) ) {
-				$t_filter_value = META_FILTER_ANY;
-			}
-			if( ( $t_filter_value === 'none' ) || ( $t_filter_value === '[none]' ) ) {
-				$t_filter_value = META_FILTER_NONE;
-			}
-			# Ensure the filter property has the right type - see #20087
-			switch( $t_multi_field_type ) {
-				case 'string' :
-				case 'int' :
-					settype( $t_filter_value, $t_multi_field_type );
-					break;
-			}
-			$t_checked_array[] = $t_filter_value;
+			$t_checked_array[] = $t_function_validate_type( $t_filter_value, $t_multi_field_type );
 		}
 		$p_filter_arr[$t_multi_field_name] = $t_checked_array;
 	}
@@ -776,11 +831,19 @@ function filter_get_default_array( $p_view_type = null ) {
 		FILTER_PROPERTY_NOTE_USER_ID => $t_meta_filter_any_array,
 		FILTER_PROPERTY_STICKY => gpc_string_to_bool( config_get( 'show_sticky_issues' ) ),
 		FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED => false,
-		FILTER_PROPERTY_START_DATE_SUBMITTED => date( config_get( 'short_date_format' ) ),
-		FILTER_PROPERTY_END_DATE_SUBMITTED => date( config_get( 'short_date_format' ) ),
+		FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH => date( 'm' ),
+		FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH => date( 'm' ),
+		FILTER_PROPERTY_DATE_SUBMITTED_START_DAY => 1,
+		FILTER_PROPERTY_DATE_SUBMITTED_END_DAY => date( 'd' ),
+		FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR => date( 'Y' ),
+		FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR => date( 'Y' ),
 		FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE => false,
-		FILTER_PROPERTY_LAST_UPDATED_START_DATE => date( config_get( 'short_date_format' ) ),
-		FILTER_PROPERTY_LAST_UPDATED_END_DATE => date( config_get( 'short_date_format' ) ),
+		FILTER_PROPERTY_LAST_UPDATED_START_MONTH => date( 'm' ),
+		FILTER_PROPERTY_LAST_UPDATED_END_MONTH => date( 'm' ),
+		FILTER_PROPERTY_LAST_UPDATED_START_DAY => 1,
+		FILTER_PROPERTY_LAST_UPDATED_END_DAY => date( 'd' ),
+		FILTER_PROPERTY_LAST_UPDATED_START_YEAR => date( 'Y' ),
+		FILTER_PROPERTY_LAST_UPDATED_END_YEAR => date( 'Y' ),
 		FILTER_PROPERTY_SEARCH => '',
 		FILTER_PROPERTY_VIEW_STATE => META_FILTER_ANY,
 		FILTER_PROPERTY_TAG_STRING => '',
@@ -922,7 +985,7 @@ function filter_serialize( $p_filter_array ) {
  * @return boolean
  */
 function filter_is_cookie_valid() {
-	$t_view_all_cookie_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
+	$t_view_all_cookie_id = gpc_get_cookie( config_get_global( 'view_all_cookie' ), '' );
 	$t_view_all_cookie = filter_db_get_filter( $t_view_all_cookie_id );
 
 	# check to see if the cookie does not exist
@@ -1001,6 +1064,8 @@ function filter_get_query_sort_data( array &$p_filter, $p_show_sticky, array $p_
 		$p_query_clauses['order'][] = '{bug}.sticky DESC';
 	}
 
+	$t_included_project_ids = $p_query_clauses['metadata']['included_projects'];
+	$t_user_id = $p_query_clauses['metadata']['user_id'];
 	$t_count = count( $t_sort_fields );
 	for( $i = 0; $i < $t_count; $i++ ) {
 		$c_sort = $t_sort_fields[$i];
@@ -1012,20 +1077,82 @@ function filter_get_query_sort_data( array &$p_filter, $p_show_sticky, array $p_
 			$t_custom_field_id = custom_field_get_id_from_name( $t_custom_field );
 			$t_def = custom_field_get_definition( $t_custom_field_id );
 			$t_value_field = ( $t_def['type'] == CUSTOM_FIELD_TYPE_TEXTAREA ? 'text' : 'value' );
-			$c_cf_alias = 'custom_field_' . $t_custom_field_id;
 
-			# Distinguish filter table aliases from sort table aliases (see #19670)
-			$t_cf_table_alias = 'cf_sort_' . $t_custom_field_id;
-			$t_cf_select = $t_cf_table_alias . '.' . $t_value_field . ' ' . $c_cf_alias;
+			$t_table_name = '';
+			# if the custom field was filtered, there is already a calculated join, so reuse that table alias
+			# otherwise, a new join must be calculated
+			if( isset( $p_query_clauses['metadata']['cf_alias'][$t_custom_field_id] ) ) {
+				$t_table_name = $p_query_clauses['metadata']['cf_alias'][$t_custom_field_id];
+			} else {
+				# @TODO This code for CF visibility is the same as filter_get_bug_rows_query_clauses()
+				# It should be encapsulated and reused
 
-			# check to be sure this field wasn't already added to the query.
-			if( !in_array( $t_cf_select, $p_query_clauses['select'] ) ) {
-				$p_query_clauses['select'][] = $t_cf_select;
-				$p_query_clauses['join'][] = 'LEFT JOIN {custom_field_string} ' . $t_cf_table_alias . ' ON
-											{bug}.id = ' . $t_cf_table_alias . '.bug_id AND ' . $t_cf_table_alias . '.field_id = ' . $t_custom_field_id;
+				$t_searchable_projects = array_intersect( $t_included_project_ids, custom_field_get_project_ids( $t_custom_field_id ) );
+				$t_projects_can_view_field = access_project_array_filter( (int)$t_def['access_level_r'], $t_searchable_projects, $t_user_id );
+				if( empty( $t_projects_can_view_field ) ) {
+					continue;
+				}
+
+				$t_table_name = 'cf_sort_' . $t_custom_field_id;
+				$t_cf_join_clause = 'LEFT OUTER JOIN {custom_field_string} ' . $t_table_name . ' ON {bug}.id = ' . $t_table_name . '.bug_id AND ' . $t_table_name . '.field_id = ' . $t_custom_field_id;
+
+				# This diff will contain those included projects that can't view this custom field
+				$t_diff = array_diff( $t_included_project_ids, $t_projects_can_view_field );
+				# If not empty, it means there are some projects that can't view the field values,
+				# so a project filter must be used to not include values from those projects
+				if( !empty( $t_diff ) ) {
+					$t_cf_join_clause .= ' AND {bug}.project_id IN (' . implode( ',', $t_projects_can_view_field ) . ')';
+				}
+				$p_query_clauses['metadata']['cf_alias'][$t_custom_field_id] = $t_table_name;
+				$p_query_clauses['join'][] = $t_cf_join_clause;
 			}
 
-			$p_query_clauses['order'][] = $c_cf_alias . ' ' . $c_dir;
+			# if no join can be used (eg, no view access), skip this field from the order clause
+			if( empty( $t_table_name ) ) {
+				continue;
+			}
+
+			$t_field_alias = 'cf_sortfield_' . $t_custom_field_id;
+			$t_sort_col = $t_table_name . '.' . $t_value_field;
+
+			# which types need special type cast
+			switch( $t_def['type'] ) {
+					case CUSTOM_FIELD_TYPE_FLOAT:
+						# mysql can't cast to float, use alternative syntax
+						$t_sort_expr = db_is_mysql() ? $t_sort_col . '+0.0' : 'CAST(NULLIF(' . $t_sort_col . ',\'\') AS FLOAT)';
+						break;
+					case CUSTOM_FIELD_TYPE_DATE:
+					case CUSTOM_FIELD_TYPE_NUMERIC:
+						$t_sort_expr = 'CAST(NULLIF(' . $t_sort_col . ',\'\') AS DECIMAL)';
+						break;
+					default: # no cast needed
+						$t_sort_expr = $t_sort_col;
+			}
+
+			# which types need special treatment for null sorting
+			switch( $t_def['type'] ) {
+				case CUSTOM_FIELD_TYPE_DATE:
+				case CUSTOM_FIELD_TYPE_NUMERIC:
+				case CUSTOM_FIELD_TYPE_FLOAT:
+					$t_null_last = true;
+					break;
+				default:
+					$t_null_last = false;
+			}
+
+			if( $t_null_last ) {
+				$t_null_expr = 'CASE WHEN NULLIF(' . $t_sort_col . ', \'\') IS NULL THEN 1 ELSE 0 END';
+				$t_clause_for_select = $t_null_expr . ' AS ' . $t_field_alias . '_null';
+				$t_clause_for_select .= ', ' . $t_sort_expr . ' AS ' . $t_field_alias;
+				$t_clause_for_order = $t_field_alias . '_null ASC, ' . $t_field_alias . ' ' . $c_dir;
+			} else {
+				$t_clause_for_select = $t_sort_expr . ' AS ' . $t_field_alias;
+				$t_clause_for_order = $t_field_alias . ' ' . $c_dir;
+			}
+
+			# Note: pgsql needs the sort expression to appear as member of the "select distinct"
+			$p_query_clauses['select'][] = $t_clause_for_select;
+			$p_query_clauses['order'][] = $t_clause_for_order;
 
 		# if sorting by plugin columns
 		} else if( column_is_plugin_column( $c_sort ) ) {
@@ -1046,13 +1173,15 @@ function filter_get_query_sort_data( array &$p_filter, $p_show_sticky, array $p_
 		} else {
 			$t_sort_col = '{bug}.' . $c_sort;
 
-			# when sorting by due_date, always display undefined dates last
+			# When sorting by due_date, always display undefined dates last.
+			# Undefined date is defaulted as "1" in database, so add a special
+			# sort clause to group and sort by this.
 			if( 'due_date' == $c_sort && 'ASC' == $c_dir ) {
-				$t_sort_due_date = $t_sort_col . ' = 1';
-				$p_query_clauses['select'][] = $t_sort_due_date;
-				$t_sort_col = $t_sort_due_date . ', ' . $t_sort_col;
+				$t_null_expr = 'CASE ' . $t_sort_col . ' WHEN 1 THEN 1 ELSE 0 END';
+				$p_query_clauses['select'][] = $t_null_expr . ' AS due_date_sort_null';
+				$p_query_clauses['order'][] = 'due_date_sort_null ASC';
 			}
-
+			# main sort clause for due date
 			$p_query_clauses['order'][] = $t_sort_col . ' ' .$c_dir;
 		}
 	}
@@ -1337,89 +1466,32 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 		' JOIN {project} ON {project}.id = {bug}.project_id',
 	);
 
-	# normalize the project filtering into an array $t_project_ids
-	if( FILTER_VIEW_TYPE_SIMPLE == $t_view_type ) {
-		log_event( LOG_FILTERING, 'Simple Filter' );
-		$t_project_ids = array(
-			$t_project_id,
-		);
-		$t_include_sub_projects = true;
-	} else {
-		log_event( LOG_FILTERING, 'Advanced Filter' );
-		if( !is_array( $t_filter[FILTER_PROPERTY_PROJECT_ID] ) ) {
-			$t_project_ids = array(
-				(int)$t_filter[FILTER_PROPERTY_PROJECT_ID],
-			);
-		} else {
-			$t_project_ids = array_map( 'intval', $t_filter[FILTER_PROPERTY_PROJECT_ID] );
-		}
-
-		$t_include_sub_projects = (( count( $t_project_ids ) == 1 ) && ( ( $t_project_ids[0] == META_FILTER_CURRENT ) || ( $t_project_ids[0] == ALL_PROJECTS ) ) );
-	}
-
-	log_event( LOG_FILTERING, 'project_ids = @P' . implode( ', @P', $t_project_ids ) );
-	log_event( LOG_FILTERING, 'include sub-projects = ' . ( $t_include_sub_projects ? '1' : '0' ) );
-
-	# if the array has ALL_PROJECTS, then reset the array to only contain ALL_PROJECTS.
-	# replace META_FILTER_CURRENT with the actualy current project id.
-	$t_all_projects_found = false;
-	$t_new_project_ids = array();
-	foreach( $t_project_ids as $t_pid ) {
-		if( $t_pid == META_FILTER_CURRENT ) {
-			$t_pid = $t_project_id;
-		}
-
-		if( $t_pid == ALL_PROJECTS ) {
-			$t_all_projects_found = true;
-			log_event( LOG_FILTERING, 'all projects selected' );
-			break;
-		}
-
-		# filter out inaccessible projects.
-		if( !project_exists( $t_pid ) || !access_has_project_level( config_get( 'view_bug_threshold', null, $t_user_id, $t_pid ), $t_pid, $t_user_id ) ) {
-			log_event( LOG_FILTERING, 'Invalid or inaccessible project: ' . $t_pid );
-			continue;
-		}
-
-		$t_new_project_ids[] = $t_pid;
-	}
+	# Metadata array will store information needed at later points, for example,
+	# when calculating the sort clauses.
+	$t_metadata = array();
+	$t_metadata['user_id'] = $c_user_id;
 
 	$t_projects_query_required = true;
-	if( $t_all_projects_found ) {
+	$t_included_project_ids = filter_get_included_projects( $t_filter, $t_project_id, $t_user_id, true /* return all projects */ );
+
+	if( ALL_PROJECTS == $t_included_project_ids ) {
+		# The list of expanded projects is needed later even if project_query is not required
+		$t_included_project_ids = filter_get_included_projects( $t_filter, $t_project_id, $t_user_id, false /* return all projects */ );
+		# this special case can skip the projects query clause:
 		if( user_is_administrator( $t_user_id ) ) {
 			log_event( LOG_FILTERING, 'all projects + administrator, hence no project filter.' );
 			$t_projects_query_required = false;
-		} else {
-			$t_project_ids = user_get_accessible_projects( $t_user_id );
 		}
-	} else {
-		$t_project_ids = $t_new_project_ids;
 	}
+	$t_metadata['included_projects'] = $t_included_project_ids;
 
 	if( $t_projects_query_required ) {
-		# expand project ids to include sub-projects
-		if( $t_include_sub_projects ) {
-			$t_top_project_ids = $t_project_ids;
-
-			foreach( $t_top_project_ids as $t_pid ) {
-				log_event( LOG_FILTERING, 'Getting sub-projects for project id @P' . $t_pid );
-				$t_subproject_ids = user_get_all_accessible_subprojects( $t_user_id, $t_pid );
-				if( !$t_subproject_ids ) {
-					continue;
-				}
-				$t_project_ids = array_merge( $t_project_ids, $t_subproject_ids );
-			}
-
-			$t_project_ids = array_unique( $t_project_ids );
-		}
 
 		# if no projects are accessible, then return an empty array.
-		if( count( $t_project_ids ) == 0 ) {
+		if( count( $t_included_project_ids ) == 0 ) {
 			log_event( LOG_FILTERING, 'no accessible projects' );
 			return array();
 		}
-
-		log_event( LOG_FILTERING, 'project_ids after including sub-projects = @P' . implode( ', @P', $t_project_ids ) );
 
 		# this array is to be populated with project ids for which we only want to show public issues.  This is due to the limited
 		# access of the current user.
@@ -1429,7 +1501,10 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 		$t_private_and_public_project_ids = array();
 		$t_limited_projects = array();
 
-		foreach( $t_project_ids as $t_pid ) {
+		# make sure the project rows are cached, as they will be used to check access levels.
+		project_cache_array_rows( $t_included_project_ids );
+
+		foreach( $t_included_project_ids as $t_pid ) {
 			# limit reporters to visible projects
 			if( ( ON === $t_limit_reporters ) && ( !access_has_project_level( access_threshold_min_level( config_get( 'report_bug_threshold', null, $t_user_id, $t_pid ) ) + 1, $t_pid, $t_user_id ) ) ) {
 				array_push( $t_limited_projects, '({bug}.project_id=' . $t_pid . ' AND ({bug}.reporter_id=' . $t_user_id . ') )' );
@@ -1490,11 +1565,15 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 
 	# creation date filter
 	if( ( 'on' == $t_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] )
-			&& is_string( $t_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] )
-			&& is_string( $t_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] )
 			) {
-		$t_start_string = $t_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] . ' 00:00:00';
-		$t_end_string = $t_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] . ' 23:59:59';
+		$t_start_string = $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] . '-' . $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] . '-' . $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] . ' 00:00:00';
+		$t_end_string = $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] . '-' . $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] . '-' . $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] . ' 23:59:59';
 
 		$t_where_params[] = strtotime( $t_start_string );
 		$t_where_params[] = strtotime( $t_end_string );
@@ -1504,11 +1583,15 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 
 	# last update date filter
 	if( ( 'on' == $t_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] )
-			&& is_string( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] )
-			&& is_string( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] )
+			&& is_numeric( $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] )
 			) {
-		$t_start_string = $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] . ' 00:00:00';
-		$t_end_string = $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] . ' 23:59:59';
+		$t_start_string = $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] . '-' . $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] . '-' . $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] . ' 00:00:00';
+		$t_end_string = $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] . '-' . $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] . '-' . $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] . ' 23:59:59';
 
 		$t_where_params[] = strtotime( $t_start_string );
 		$t_where_params[] = strtotime( $t_end_string );
@@ -1988,61 +2071,89 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 
 	# tags
 	$c_tag_string = trim( $t_filter[FILTER_PROPERTY_TAG_STRING] );
-	$c_tag_select = trim( $t_filter[FILTER_PROPERTY_TAG_SELECT] );
-	if( is_blank( $c_tag_string ) && !is_blank( $c_tag_select ) && $c_tag_select != 0 && tag_exists( $c_tag_select ) ) {
-		$t_tag = tag_get( $c_tag_select );
-		$c_tag_string = $t_tag['name'];
-	}
+	$c_tag_select = (int)$t_filter[FILTER_PROPERTY_TAG_SELECT];
 
-	if( !is_blank( $c_tag_string ) ) {
+	if( !is_blank( $c_tag_string ) || $c_tag_select > 0 ) {
 		$t_tags = tag_parse_filters( $c_tag_string );
 
-		if( count( $t_tags ) ) {
+		if( count( $t_tags ) || $c_tag_select > 0 ) {
 
-			$t_tags_all = array();
-			$t_tags_any = array();
-			$t_tags_none = array();
-
-			foreach( $t_tags as $t_tag_row ) {
-				switch( $t_tag_row['filter'] ) {
-					case 1:
-						$t_tags_all[] = $t_tag_row;
-						break;
-					case 0:
-						$t_tags_any[] = $t_tag_row;
-						break;
-					case -1:
-						$t_tags_none[] = $t_tag_row;
-						break;
+			$t_projects_can_view_tags = access_project_array_filter( 'tag_view_threshold', $t_included_project_ids, $t_user_id );
+			if( !empty( $t_projects_can_view_tags ) ) {
+				$t_diff = array_diff( $t_included_project_ids, $t_projects_can_view_tags );
+				# If tags can't be viewed in all included project, a filter must be used
+				if( empty( $t_diff ) ) {
+					$t_tag_projects_clause = '';
+				} else {
+					$t_tag_projects_clause = ' AND {bug}.project_id IN (' . implode( ',', $t_projects_can_view_tags ) . ')';
 				}
-			}
 
-			if( 0 < $t_filter[FILTER_PROPERTY_TAG_SELECT] && tag_exists( $t_filter[FILTER_PROPERTY_TAG_SELECT] ) ) {
-				$t_tags_any[] = tag_get( $t_filter[FILTER_PROPERTY_TAG_SELECT] );
-			}
+				$t_tags_all = array();
+				$t_tags_any = array();
+				$t_tags_none = array();
 
-			if( count( $t_tags_all ) ) {
-				$t_clauses = array();
-				foreach( $t_tags_all as $t_tag_row ) {
-					array_push( $t_clauses, '{bug}.id IN ( SELECT bug_id FROM {bug_tag} WHERE {bug_tag}.tag_id = ' . $t_tag_row['id'] . ')' );
+				foreach( $t_tags as $t_tag_row ) {
+					switch( $t_tag_row['filter'] ) {
+						case 1:
+							$t_tags_all[] = $t_tag_row;
+							break;
+						case 0:
+							$t_tags_any[] = $t_tag_row;
+							break;
+						case -1:
+							$t_tags_none[] = $t_tag_row;
+							break;
+					}
 				}
-				array_push( $t_where_clauses, '(' . implode( ' AND ', $t_clauses ) . ')' );
-			}
 
-			if( count( $t_tags_any ) ) {
-				$t_clauses = array();
-				foreach( $t_tags_any as $t_tag_row ) {
-					array_push( $t_clauses, '{bug_tag}.tag_id = ' . $t_tag_row['id'] );
+				# Add the tag id to the array, from filter field "tag_select"
+				if( 0 < $c_tag_select && tag_exists( $c_tag_select ) ) {
+					$t_tags_any[] = tag_get( $c_tag_select );
 				}
-				array_push( $t_where_clauses, '{bug}.id IN ( SELECT bug_id FROM {bug_tag} WHERE ( ' . implode( ' OR ', $t_clauses ) . ') )' );
-			}
 
-			if( count( $t_tags_none ) ) {
-				$t_clauses = array();
-				foreach( $t_tags_none as $t_tag_row ) {
-					array_push( $t_clauses, '{bug_tag}.tag_id = ' . $t_tag_row['id'] );
+				$t_tag_counter = 0;
+				if( count( $t_tags_all ) ) {
+					foreach( $t_tags_all as $t_tag_row ) {
+						$t_tag_alias = 'bug_tag_alias_' . ++$t_tag_counter;
+						array_push( $t_join_clauses,
+							'JOIN {bug_tag} ' . $t_tag_alias . ' ON ' . $t_tag_alias . '.bug_id = {bug}.id'
+							. ' AND ' . $t_tag_alias . '.tag_id=' . (int)$t_tag_row['id']
+							. $t_tag_projects_clause
+						);
+					}
 				}
-				array_push( $t_where_clauses, '{bug}.id NOT IN ( SELECT bug_id FROM {bug_tag} WHERE ( ' . implode( ' OR ', $t_clauses ) . ') )' );
+
+				if( count( $t_tags_any ) ) {
+					$t_tag_alias = 'bug_tag_alias_' . ++$t_tag_counter;
+					$t_tag_ids = array();
+					foreach( $t_tags_any as $t_tag_row ) {
+						$t_tag_ids[] = (int)$t_tag_row['id'];
+					}
+					array_push( $t_join_clauses,
+						'LEFT OUTER JOIN {bug_tag} ' . $t_tag_alias . ' ON ' . $t_tag_alias . '.bug_id = {bug}.id'
+						. ' AND ' . $t_tag_alias . '.tag_id IN (' . implode( ',', $t_tag_ids ) . ')'
+						. $t_tag_projects_clause
+					);
+
+					# If the isn't a non-outer join, check that at least one of the tags has been matched by the outer join
+					if( !count( $t_tags_all ) ) {
+						array_push( $t_where_clauses, $t_tag_alias . '.tag_id IS NOT NULL' );
+					}
+				}
+
+				if( count( $t_tags_none ) ) {
+					$t_tag_alias = 'bug_tag_alias_' . ++$t_tag_counter;
+					$t_tag_ids = array();
+					foreach( $t_tags_none as $t_tag_row ) {
+						$t_tag_ids[] = (int)$t_tag_row['id'];
+					}
+					array_push( $t_join_clauses,
+						'LEFT OUTER JOIN {bug_tag} ' . $t_tag_alias . ' ON ' . $t_tag_alias . '.bug_id = {bug}.id'
+						. ' AND ' . $t_tag_alias . '.tag_id IN (' . implode( ',', $t_tag_ids ) . ')'
+						. $t_tag_projects_clause
+					);
+					array_push( $t_where_clauses, $t_tag_alias . '.tag_id IS NULL' );
+				}
 			}
 		}
 	}
@@ -2095,11 +2206,7 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 
 	# custom field filters
 	if( ON == config_get( 'filter_by_custom_fields' ) ) {
-		# custom field filtering
-		# @@@ At the moment this gets the linked fields relating to the current project
-		#     It should get the ones relating to the project in the filter or all projects
-		#     if multiple projects.
-		$t_custom_fields = custom_field_get_linked_ids( $t_project_id );
+		$t_custom_fields = custom_field_get_linked_ids( $t_included_project_ids );
 
 		foreach( $t_custom_fields as $t_cfid ) {
 			$t_field_info = custom_field_cache_row( $t_cfid, true );
@@ -2115,13 +2222,34 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 			# Ignore all custom filters that are not set, or that are set to '' or "any"
 			if( !filter_field_is_any( $t_field ) ) {
 				$t_def = custom_field_get_definition( $t_cfid );
-				$t_table_name = '{custom_field_string}_' . $t_cfid;
+
+				# skip date custom fields with value of "any"
+				if( $t_def['type'] == CUSTOM_FIELD_TYPE_DATE && $t_field[0] == CUSTOM_FIELD_DATE_ANY ) {
+					break;
+				}
+
+				$t_table_name = 'cf_alias_' . $t_cfid;
 
 				# We need to filter each joined table or the result query will explode in dimensions
 				# Each custom field will result in a exponential growth like Number_of_Issues^Number_of_Custom_Fields
 				# and only after this process ends (if it is able to) the result query will be filtered
 				# by the WHERE clause and by the DISTINCT clause
-				$t_cf_join_clause = 'LEFT JOIN {custom_field_string} ' . $t_table_name . ' ON {bug}.id = ' . $t_table_name . '.bug_id AND ' . $t_table_name . '.field_id = ' . $t_cfid;
+				$t_cf_join_clause = 'LEFT OUTER JOIN {custom_field_string} ' . $t_table_name . ' ON {bug}.id = ' . $t_table_name . '.bug_id AND ' . $t_table_name . '.field_id = ' . $t_cfid;
+
+				$t_searchable_projects = array_intersect( $t_included_project_ids, custom_field_get_project_ids( $t_cfid ) );
+				$t_projects_can_view_field = access_project_array_filter( (int)$t_def['access_level_r'], $t_searchable_projects, $t_user_id );
+				if( empty( $t_projects_can_view_field ) ) {
+					continue;
+				}
+				# This diff will contain those included projects that can't view this custom field
+				$t_diff = array_diff( $t_included_project_ids, $t_projects_can_view_field );
+				# If not empty, it means there are some projects that can't view the field values,
+				# so a project filter must be used to not include values from those projects
+				if( !empty( $t_diff ) ) {
+					$t_cf_join_clause .= ' AND {bug}.project_id IN (' . implode( ',', $t_projects_can_view_field ) . ')';
+				}
+
+				$t_metadata['cf_alias'][$t_cfid] = $t_table_name;
 
 				if( $t_def['type'] == CUSTOM_FIELD_TYPE_DATE ) {
 					# Define the value field with type cast to integer
@@ -2158,7 +2286,7 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 							$t_filter_member = '';
 
 							# but also add those _not_ present in the custom field string table
-							array_push( $t_filter_array, '{bug}.id NOT IN (SELECT bug_id FROM {custom_field_string} WHERE field_id=' . $t_cfid . ')' );
+							array_push( $t_filter_array, $t_table_name . '.value IS NULL' );
 						}
 
 						switch( $t_def['type'] ) {
@@ -2265,6 +2393,7 @@ function filter_get_bug_rows_query_clauses( array $p_filter, $p_project_id = nul
 	$t_query_clauses['where_values'] = $t_where_params;
 	$t_query_clauses['project_where'] = $t_project_where_clauses;
 	$t_query_clauses['operator'] = $t_join_operator;
+	$t_query_clauses['metadata'] = $t_metadata;
 	$t_query_clauses = filter_get_query_sort_data( $t_filter, $p_show_sticky, $t_query_clauses );
 
 	$t_query_clauses = filter_unique_query_clauses( $t_query_clauses );
@@ -2380,8 +2509,11 @@ function filter_draw_selection_area2( $p_page_number, $p_for_screen = true, $p_e
 							filter_print_view_type_toggle( $t_url, $t_filter['_view_type'] );
 
 							if( access_has_project_level( config_get( 'create_permalink_threshold' ) ) ) {
+								# Add CSRF protection, see #22702
+								$t_permalink_url = urlencode( filter_get_url( $t_filter ) )
+									. form_security_param( 'permalink' );
 								echo '<li>';
-								echo '<a href="permalink_page.php?url=' . urlencode( filter_get_url( $t_filter ) ) . '">';
+								echo '<a href="permalink_page.php?url=' . $t_permalink_url . '">';
 								echo '<i class="ace-icon fa fa-link"></i>&#160;&#160;' . lang_get( 'create_filter_link' );
 								echo '</a>';
 								echo '</li>';
@@ -2718,6 +2850,53 @@ function filter_db_get_filter( $p_filter_id, $p_user_id = null ) {
 }
 
 /**
+ * Load a filter from db or a standard filter.
+ *
+ * @param string|integer $p_filter_id The filter id or standard filter.
+ * @param integer|null $p_user_id The user id or null for logged in user.
+ * @return null filter not found, false invalid filter, otherwise the filter.
+ */
+function filter_load( $p_filter_id, $p_user_id = null ) {
+	if( is_numeric( $p_filter_id ) ) {
+		$p_filter_id = (int)$p_filter_id;
+		$t_filter = filter_db_get_filter( $p_filter_id );
+		if( $t_filter === null ) {
+			return null;
+		}
+
+		$t_filter_detail = explode( '#', $t_filter, 2 );
+		if( !isset( $t_filter_detail[1] ) ) {
+			return false;
+		}
+
+		$t_filter = json_decode( $t_filter_detail[1], true );
+	} else {
+		$p_filter_id = strtolower( $p_filter_id );
+		$t_project_id = helper_get_current_project();
+		$t_user_id = auth_get_current_user_id();
+
+		switch( $p_filter_id ) {
+			case FILTER_STANDARD_ASSIGNED:
+				$t_filter = filter_create_assigned_to_unresolved( $t_project_id, $t_user_id );
+				break;
+			case FILTER_STANDARD_UNASSIGNED:
+				$t_filter = filter_create_assigned_to_unresolved( $t_project_id, NO_USER );
+				break;
+			case FILTER_STANDARD_REPORTED:
+				$t_filter = filter_create_reported_by( $t_project_id, $t_user_id );
+				break;
+			case FILTER_STANDARD_MONITORED:
+				$t_filter = filter_create_monitored_by( $t_project_id, $t_user_id );
+				break;
+			default:
+				return null;
+		}
+	}
+
+	return filter_ensure_valid_filter( $t_filter );
+}
+
+/**
  * get current filter for given project and user
  * @param integer $p_project_id A project identifier.
  * @param integer $p_user_id    A valid user identifier.
@@ -2940,12 +3119,15 @@ function filter_create_recently_modified( $p_days, $p_filter = null ) {
 		$p_filter[FILTER_PROPERTY_HIDE_STATUS] = META_FILTER_NONE;
 	}
 	$c_days = (int)$p_days;
-	$t_date = new DateTime('today');
-	$t_format = config_get( 'short_date_format' );
 	$p_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] = true;
-	$p_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] = $t_date->format( $t_format );
+	$t_date = new DateTime('today');
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] = $t_date->format( 'j' );
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] = $t_date->format( 'n' );
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] = $t_date->format( 'Y' );
 	$t_date->modify( '-' . $c_days . ' days' );
-	$p_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] = $t_date->format( $t_format );
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] = $t_date->format( 'j' );
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] = $t_date->format( 'n' );
+	$p_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] = $t_date->format( 'Y' );
 	return $p_filter;
 }
 
@@ -3024,7 +3206,11 @@ function filter_create_monitored_by( $p_project_id, $p_user_id ) {
  * @return array The resulting filter array
  */
 function filter_gpc_get( array $p_filter = null ) {
+	# Get or copy the view_type first as it's needed to get proper defaults
 	$f_view_type = gpc_get_string( 'view_type', null );
+	if( null === $f_view_type && is_array( $p_filter ) && isset( $p_filter['_view_type'] ) ) {
+		$f_view_type = $p_filter['_view_type'];
+	}
 
 	if( null === $p_filter ) {
 		$t_filter = filter_get_default_array( $f_view_type );
@@ -3096,26 +3282,34 @@ function filter_gpc_get( array $p_filter = null ) {
 		$f_sort = implode( ',', $t_new_sort_array );
 		$f_dir = implode( ',', $t_new_dir_array );
 	} elseif( null !== $f_sort_add ) {
-		# this parameter has to be pushed in fron t of current sort set
+		# this parameter has to be pushed in front of current sort set
 		$f_dir_add = gpc_get_string( FILTER_PROPERTY_SORT_DIRECTION . '_add', '' );
 		# Plain concatenation. Empty fields, or extra commas will be cleaned by ensure_valid_filter
 		$f_sort = $f_sort_add . ',' . $t_filter[FILTER_PROPERTY_SORT_FIELD_NAME];
 		$f_dir = $f_dir_add . ',' . $t_filter[FILTER_PROPERTY_SORT_DIRECTION];
 	} else {
-		# use the defaluts
+		# use the defaults
 		$f_sort = $t_filter[FILTER_PROPERTY_SORT_FIELD_NAME];
 		$f_dir = $t_filter[FILTER_PROPERTY_SORT_DIRECTION];
 	}
 
 	# date values
 	# creation date
-	$f_do_filter_by_date	        = gpc_get_bool( FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED, $t_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] );
-	$f_submitted_start_date			= gpc_get_string( FILTER_PROPERTY_START_DATE_SUBMITTED, $t_filter[FILTER_PROPERTY_START_DATE_SUBMITTED] );
-	$f_submitted_end_date			= gpc_get_string( FILTER_PROPERTY_END_DATE_SUBMITTED, $t_filter[FILTER_PROPERTY_END_DATE_SUBMITTED] );
+	$f_do_filter_by_date	= gpc_get_bool( FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED, $t_filter[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] );
+	$f_start_month			= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] );
+	$f_end_month			= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] );
+	$f_start_day			= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_START_DAY, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] );
+	$f_end_day				= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_END_DAY, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] );
+	$f_start_year			= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] );
+	$f_end_year				= gpc_get_int( FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR, $t_filter[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] );
 	# last_updated date values
 	$f_do_filter_by_last_updated_date	= gpc_get_bool( FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE, $t_filter[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] );
-	$f_last_updated_start_date			= gpc_get_string( FILTER_PROPERTY_LAST_UPDATED_START_DATE, $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DATE] );
-	$f_last_updated_end_date			= gpc_get_string( FILTER_PROPERTY_LAST_UPDATED_END_DATE, $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DATE] );
+	$f_last_updated_start_month			= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_START_MONTH, $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] );
+	$f_last_updated_end_month			= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_END_MONTH, $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] );
+	$f_last_updated_start_day			= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_START_DAY, $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_DAY] );
+	$f_last_updated_end_day				= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_END_DAY, $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_DAY] );
+	$f_last_updated_start_year			= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_START_YEAR, $t_filter[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] );
+	$f_last_updated_end_year			= gpc_get_int( FILTER_PROPERTY_LAST_UPDATED_END_YEAR, $t_filter[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] );
 
 	$f_search				= gpc_get_string( FILTER_PROPERTY_SEARCH, $t_filter[FILTER_PROPERTY_SEARCH] );
 	$f_view_state			= gpc_get_int( FILTER_PROPERTY_VIEW_STATE, $t_filter[FILTER_PROPERTY_VIEW_STATE] );
@@ -3153,10 +3347,16 @@ function filter_gpc_get( array $p_filter = null ) {
 
 	# custom field updates
 	$t_custom_fields 		= custom_field_get_ids(); # @todo (thraxisp) This should really be the linked ids, but we don't know the project
-	$f_custom_fields_data 	= array();
+	$f_custom_fields_data 	= $t_filter['custom_fields'];
 	if( is_array( $t_custom_fields ) && ( count( $t_custom_fields ) > 0 ) ) {
 		foreach( $t_custom_fields as $t_cfid ) {
 			if( custom_field_type( $t_cfid ) == CUSTOM_FIELD_TYPE_DATE ) {
+
+				# check if gpc parameters are present, otherwise skip parsing.
+				if( !gpc_isset( 'custom_field_' . $t_cfid . '_control' ) ) {
+					continue;
+				}
+
 				$f_custom_fields_data[$t_cfid] = array();
 
 				# Get date control property
@@ -3171,8 +3371,10 @@ function filter_gpc_get( array $p_filter = null ) {
 					$t_start_date = (int)$f_start_date;
 					$t_start = $t_start_date;
 				} else {
-					$t_date = gpc_get_string( 'custom_field_' . $t_cfid . '_start_date', null );
-					$t_start_date = strtotime( $t_date );
+					$t_year = gpc_get_int( 'custom_field_' . $t_cfid . '_start_year', null );
+					$t_month = gpc_get_int( 'custom_field_' . $t_cfid . '_start_month', null );
+					$t_day = gpc_get_int( 'custom_field_' . $t_cfid . '_start_day', null );
+					$t_start_date = mktime( 0, 0, 0, $t_month, $t_day, $t_year );
 					# calculate correct timestamps
 					$t_start = 1;
 					switch( $t_control ) {
@@ -3204,8 +3406,10 @@ function filter_gpc_get( array $p_filter = null ) {
 					$t_end_date = (int)$f_end_date;
 					$t_end = $t_end_date;
 				} else {
-					$t_date = gpc_get_string( 'custom_field_' . $t_cfid . '_end_date', null );
-					$t_end_date = strtotime( $t_date );
+					$t_year = gpc_get_int( 'custom_field_' . $t_cfid . '_end_year', null );
+					$t_month = gpc_get_int( 'custom_field_' . $t_cfid . '_end_month', null );
+					$t_day = gpc_get_int( 'custom_field_' . $t_cfid . '_end_day', null );
+					$t_end_date = mktime( 0, 0, 0, $t_month, $t_day, $t_year );
 					# calculate correct timestamps
 					$t_end = 1;
 					switch( $t_control ) {
@@ -3235,6 +3439,12 @@ function filter_gpc_get( array $p_filter = null ) {
 				$f_custom_fields_data[$t_cfid][2] = $t_end;
 
 			} else {
+
+				# check if gpc parameters are present, otherwise skip parsing.
+				if( !gpc_isset( 'custom_field_' . $t_cfid ) ) {
+					continue;
+				}
+
 				if( is_array( gpc_get( 'custom_field_' . $t_cfid, null ) ) ) {
 					$f_custom_fields_data[$t_cfid] = gpc_get_string_array( 'custom_field_' . $t_cfid, array( META_FILTER_ANY ) );
 				} else {
@@ -3262,11 +3472,19 @@ function filter_gpc_get( array $p_filter = null ) {
 	$t_filter_input[FILTER_PROPERTY_SORT_FIELD_NAME] 		= $f_sort;
 	$t_filter_input[FILTER_PROPERTY_SORT_DIRECTION] 			= $f_dir;
 	$t_filter_input[FILTER_PROPERTY_FILTER_BY_DATE_SUBMITTED] 			= $f_do_filter_by_date;
-	$t_filter_input[FILTER_PROPERTY_START_DATE_SUBMITTED] 			    = $f_submitted_start_date;
-	$t_filter_input[FILTER_PROPERTY_END_DATE_SUBMITTED] 				= $f_submitted_end_date;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_START_MONTH] 			= $f_start_month;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_START_DAY] 				= $f_start_day;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_START_YEAR] 				= $f_start_year;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_END_MONTH] 				= $f_end_month;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_END_DAY] 				= $f_end_day;
+	$t_filter_input[FILTER_PROPERTY_DATE_SUBMITTED_END_YEAR] 				= $f_end_year;
 	$t_filter_input[FILTER_PROPERTY_FILTER_BY_LAST_UPDATED_DATE] = $f_do_filter_by_last_updated_date;
-	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_START_DATE] 	= $f_last_updated_start_date;
-	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_END_DATE] 		= $f_last_updated_end_date;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_START_MONTH] 	= $f_last_updated_start_month;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_START_DAY] 	= $f_last_updated_start_day;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_START_YEAR] 	= $f_last_updated_start_year;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_END_MONTH] 	= $f_last_updated_end_month;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_END_DAY] 		= $f_last_updated_end_day;
+	$t_filter_input[FILTER_PROPERTY_LAST_UPDATED_END_YEAR] 		= $f_last_updated_end_year;
 	$t_filter_input[FILTER_PROPERTY_SEARCH] 					= $f_search;
 	$t_filter_input[FILTER_PROPERTY_HIDE_STATUS] 			= $f_hide_status;
 	$t_filter_input[FILTER_PROPERTY_RESOLUTION] 				= $f_show_resolution;
@@ -3398,4 +3616,105 @@ function filter_print_view_type_toggle( $p_url, $p_view_type ) {
 		lang_get( $t_lang_string )
 	);
 	echo '</li>';
+}
+
+/**
+ * Returns an array of project ids which are included in the filter.
+ * This array includes all individual projects/subprojects that are in the search scope.
+ * If ALL_PROJECTS were included directly, or indirectly, and the parameter $p_return_all_projects
+ * is set to true, the value ALL_PROJECTS will be returned. Otherwise the array will be expanded
+ * to all actual accesible projects
+ * @param array $p_filter                 Filter array
+ * @param integer $p_project_id           Project id to use in filtering, if applicable by filter type
+ * @param integer $p_user_id              User id to use as current user when filtering
+ * @param boolean $p_return_all_projects  If true, return ALL_PROJECTS directly if found, instead of
+ *                                         expanding to individual project ids
+ * @return array|integer	Array of project ids, or ALL_PROJECTS if applicable.
+ */
+function filter_get_included_projects( array $p_filter, $p_project_id = null, $p_user_id = null, $p_return_all_projects = false ) {
+	if( null === $p_project_id ) {
+		$t_project_id = helper_get_current_project();
+	} else {
+		$t_project_id = $p_project_id;
+	}
+	if( !$p_user_id ) {
+		$t_user_id = auth_get_current_user_id();
+	} else {
+		$t_user_id = $p_user_id;
+	}
+
+	$t_view_type = $p_filter['_view_type'];
+	# normalize the project filtering into an array $t_project_ids
+	if( FILTER_VIEW_TYPE_SIMPLE == $t_view_type ) {
+		log_event( LOG_FILTERING, 'Simple Filter' );
+		$t_project_ids = array( $t_project_id );
+		$t_include_sub_projects = true;
+	} else {
+		log_event( LOG_FILTERING, 'Advanced Filter' );
+		$t_project_ids = $p_filter[FILTER_PROPERTY_PROJECT_ID];
+		$t_include_sub_projects = (( count( $t_project_ids ) == 1 ) && ( ( $t_project_ids[0] == META_FILTER_CURRENT ) || ( $t_project_ids[0] == ALL_PROJECTS ) ) );
+	}
+
+	log_event( LOG_FILTERING, 'project_ids = @P' . implode( ', @P', $t_project_ids ) );
+	log_event( LOG_FILTERING, 'include sub-projects = ' . ( $t_include_sub_projects ? '1' : '0' ) );
+
+	# if the array has ALL_PROJECTS, then reset the array to only contain ALL_PROJECTS.
+	# replace META_FILTER_CURRENT with the actual current project id.
+
+	$t_all_projects_found = false;
+	$t_new_project_ids = array();
+	foreach( $t_project_ids as $t_pid ) {
+		if( $t_pid == META_FILTER_CURRENT ) {
+			$t_pid = $t_project_id;
+		}
+
+		if( $t_pid == ALL_PROJECTS ) {
+			$t_all_projects_found = true;
+			log_event( LOG_FILTERING, 'all projects selected' );
+			break;
+		}
+
+		# filter out inaccessible projects.
+		if( !project_exists( $t_pid ) || !access_has_project_level( config_get( 'view_bug_threshold', null, $t_user_id, $t_pid ), $t_pid, $t_user_id ) ) {
+			log_event( LOG_FILTERING, 'Invalid or inaccessible project: ' . $t_pid );
+			continue;
+		}
+
+		$t_new_project_ids[] = $t_pid;
+	}
+
+	# if not expanding ALL_PROJECTS, shortcut return directly
+	if( $t_all_projects_found && $p_return_all_projects ) {
+		return ALL_PROJECTS;
+	}
+
+	if( $t_all_projects_found ) {
+		$t_project_ids = user_get_accessible_projects( $t_user_id );
+	} else {
+		$t_project_ids = $t_new_project_ids;
+	}
+
+	# expand project ids to include sub-projects
+	if( $t_include_sub_projects ) {
+		$t_top_project_ids = $t_project_ids;
+
+		foreach( $t_top_project_ids as $t_pid ) {
+			log_event( LOG_FILTERING, 'Getting sub-projects for project id @P' . $t_pid );
+			$t_subproject_ids = user_get_all_accessible_subprojects( $t_user_id, $t_pid );
+			if( !$t_subproject_ids ) {
+				continue;
+			}
+			$t_project_ids = array_merge( $t_project_ids, $t_subproject_ids );
+		}
+
+		$t_project_ids = array_unique( $t_project_ids );
+	}
+
+	if( count( $t_project_ids ) ) {
+		log_event( LOG_FILTERING, 'project_ids after including sub-projects = @P' . implode( ', @P', $t_project_ids ) );
+	} else {
+		log_event( LOG_FILTERING, 'no accessible projects' );
+	}
+
+	return $t_project_ids;
 }

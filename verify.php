@@ -50,7 +50,7 @@ require_css( 'login.css' );
 
 
 # check if at least one way to get here is enabled
-if( OFF == config_get( 'allow_signup' ) &&
+if( !auth_signup_enabled() &&
 	OFF == config_get( 'lost_password_feature' ) &&
 	OFF == config_get( 'send_reset_password' ) ) {
 	trigger_error( ERROR_LOST_PASSWORD_NOT_ENABLED, ERROR );
@@ -69,7 +69,7 @@ if( auth_is_user_authenticated() ) {
 
 $t_token_confirm_hash = token_get_value( TOKEN_ACCOUNT_ACTIVATION, $f_user_id );
 
-if( $f_confirm_hash != $t_token_confirm_hash ) {
+if( $t_token_confirm_hash == null || $f_confirm_hash !== $t_token_confirm_hash ) {
 	trigger_error( ERROR_LOST_PASSWORD_CONFIRM_HASH_INVALID, ERROR );
 }
 
@@ -77,7 +77,7 @@ user_reset_failed_login_count_to_zero( $f_user_id );
 user_reset_lost_password_in_progress_count_to_zero( $f_user_id );
 
 # fake login so the user can set their password
-auth_attempt_script_login( user_get_field( $f_user_id, 'username' ) );
+auth_attempt_script_login( user_get_username( $f_user_id ) );
 
 user_increment_login_count( $f_user_id );
 
@@ -88,7 +88,7 @@ $t_row = user_get_row( $f_user_id );
 
 extract( $t_row, EXTR_PREFIX_ALL, 'u' );
 
-$t_can_change_password = helper_call_custom_function( 'auth_can_change_password', array() );
+$t_can_change_password = auth_can_set_password( $f_user_id );
 
 layout_login_page_begin();
 
@@ -97,11 +97,7 @@ layout_login_page_begin();
 <div class="col-md-offset-4 col-md-4 col-sm-8 col-sm-offset-1">
 	<div class="login-container">
 		<div class="space-12 hidden-480"></div>
-		<a href="<?php echo config_get( 'logo_url' ) ?>">
-			<h1 class="center white">
-				<img src="<?php echo helper_mantis_url( config_get( 'logo_image' ) ); ?>">
-			</h1>
-		</a>
+		<?php layout_login_page_logo() ?>
 		<div class="space-24 hidden-480"></div>
 
 		<?php
@@ -112,7 +108,7 @@ layout_login_page_begin();
 				echo '</div>';
 			} else {
 				echo '<div id="reset-passwd-msg" class="alert alert-sm alert-warning">';
-				echo lang_get( 'no_password_change' );
+				echo auth_password_managed_elsewhere_message();
 				echo '</div>';
 			}
 		?>

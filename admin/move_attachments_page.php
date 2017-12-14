@@ -154,7 +154,7 @@ if( isset( $t_projects[ALL_PROJECTS] ) ) {
 
 		$t_file_path = $t_project['file_path'];
 		if( is_blank( $t_file_path ) ) {
-			$t_file_path = config_get( 'absolute_path_default_upload_folder' );
+			$t_file_path = config_get_global( 'absolute_path_default_upload_folder' );
 		}
 
 		echo '<tr>';
@@ -188,7 +188,7 @@ if( isset( $t_projects[ALL_PROJECTS] ) ) {
 	
 </table>
 <div class="widget-toolbox padding-8 clearfix">
-	<input name="type" type="hidden" value="<?php echo $f_file_type ?>" />
+	<input name="type" type="hidden" value="<?php echo string_attribute( $f_file_type); ?>" />
 	<input type="submit" class="btn btn-primary btn-white btn-round" value="Move Attachments" />
 </div>
 </div>

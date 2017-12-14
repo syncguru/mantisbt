@@ -68,7 +68,7 @@ if( !$t_account_verification ) {
 	# set a temporary cookie so the login information is passed between pages.
 	auth_set_cookies( $t_verify_user_id, false );
 	# fake login so the user can set their password
-	auth_attempt_script_login( user_get_field( $t_verify_user_id, 'username' ) );
+	auth_attempt_script_login( user_get_username( $t_verify_user_id ) );
 	$t_user_id = $t_verify_user_id;
 }
 
@@ -96,7 +96,7 @@ if( $t_account_verification && is_blank( $f_password ) ) {
 	trigger_error( ERROR_EMPTY_FIELD, ERROR );
 }
 
-$t_ldap = ( LDAP == config_get( 'login_method' ) );
+$t_ldap = ( LDAP == config_get_global( 'login_method' ) );
 
 # Update email (but only if LDAP isn't being used)
 # Do not update email for a user verification
@@ -113,7 +113,7 @@ if( !( $t_ldap && config_get( 'use_ldap_realname' ) ) ) {
 	$t_realname = string_normalize( $f_realname );
 	if( $t_realname != user_get_field( $t_user_id, 'realname' ) ) {
 		# checks for problems with realnames
-		$t_username = user_get_field( $t_user_id, 'username' );
+		$t_username = user_get_username( $t_user_id );
 		user_ensure_realname_unique( $t_username, $t_realname );
 		$t_update_realname = true;
 	}

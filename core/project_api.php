@@ -310,7 +310,7 @@ function validate_project_file_path( $p_file_path ) {
 		# If the provided path is the same as the default, make the path blank.
 		# This means that if the default upload path is changed, you don't have
 		# to update the upload path for every single project.
-		if( !strcmp( $p_file_path, config_get( 'absolute_path_default_upload_folder' ) ) ) {
+		if( !strcmp( $p_file_path, config_get_global( 'absolute_path_default_upload_folder' ) ) ) {
 			$p_file_path = '';
 		} else {
 			file_ensure_valid_upload_path( $p_file_path );
@@ -569,26 +569,13 @@ function project_get_name( $p_project_id, $p_trigger_errors = true ) {
  * @param integer $p_project_id A project identifier.
  * @param integer $p_user_id    A user identifier.
  * @return integer
+ * @deprecated     access_get_local_level() should be used in preference to this function
+ *                 This function has been deprecated in version 2.6
  */
 function project_get_local_user_access_level( $p_project_id, $p_user_id ) {
-	$p_project_id = (int)$p_project_id;
-
-	if( ALL_PROJECTS == $p_project_id ) {
-		return false;
-	}
-
-	db_param_push();
-	$t_query = 'SELECT access_level
-				  FROM {project_user_list}
-				  WHERE user_id=' . db_param() . ' AND project_id=' . db_param();
-	$t_result = db_query( $t_query, array( (int)$p_user_id, $p_project_id ) );
-
-	$t_level = db_result( $t_result );
-	if( $t_level ) {
-		return (int)$t_level;
-	} else {
-		return false;
-	}
+	error_parameters( __FUNCTION__ . '()', 'access_get_local_level()' );
+	trigger_error( ERROR_DEPRECATED_SUPERSEDED, DEPRECATED );
+	return access_get_local_level( $p_user_id, $p_project_id );
 }
 
 /**
@@ -742,11 +729,11 @@ function project_get_upload_path( $p_project_id ) {
 	}
 
 	if( $p_project_id == ALL_PROJECTS ) {
-		$t_path = config_get( 'absolute_path_default_upload_folder', '', ALL_USERS, ALL_PROJECTS );
+		$t_path = config_get_global( 'absolute_path_default_upload_folder', '' );
 	} else {
 		$t_path = project_get_field( $p_project_id, 'file_path' );
 		if( is_blank( $t_path ) ) {
-			$t_path = config_get( 'absolute_path_default_upload_folder', '', ALL_USERS, $p_project_id );
+			$t_path = config_get_global( 'absolute_path_default_upload_folder', '' );
 		}
 	}
 

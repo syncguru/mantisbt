@@ -30,6 +30,7 @@
  * @uses config_api.php
  * @uses constant_inc.php
  * @uses custom_field_api.php
+ * @uses event_api.php
  * @uses form_api.php
  * @uses gpc_api.php
  * @uses helper_api.php
@@ -48,6 +49,7 @@ require_api( 'bug_group_action_api.php' );
 require_api( 'config_api.php' );
 require_api( 'constant_inc.php' );
 require_api( 'custom_field_api.php' );
+require_api( 'event_api.php' );
 require_api( 'form_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'helper_api.php' );
@@ -72,6 +74,12 @@ $t_project_id = ALL_PROJECTS;
 $t_multiple_projects = false;
 $t_projects = array();
 
+# Array of parameters to be used with plugin event
+$t_event_params = array();
+$t_event_params['bug_ids'] = $f_bug_arr;
+$t_event_params['action'] = $f_action;
+$t_event_params['has_bugnote'] = false;
+
 bug_cache_array_rows( $f_bug_arr );
 
 foreach( $f_bug_arr as $t_bug_id ) {
@@ -85,6 +93,8 @@ foreach( $f_bug_arr as $t_bug_id ) {
 		}
 	}
 }
+$t_event_params['multiple_projects'] = $t_multiple_projects;
+
 if( $t_multiple_projects ) {
 	$t_project_id = ALL_PROJECTS;
 	$t_projects[ALL_PROJECTS] = ALL_PROJECTS;
@@ -122,6 +132,7 @@ $t_custom_fields_prefix = 'custom_field_';
 if( strpos( $f_action, $t_custom_fields_prefix ) === 0 ) {
 	$t_custom_field_id = (int)substr( $f_action, utf8_strlen( $t_custom_fields_prefix ) );
 	$f_action = 'CUSTOM';
+	$t_event_params['action'] = $f_action;
 }
 
 # Form name
@@ -217,10 +228,13 @@ switch( $f_action ) {
 		$t_question_title = sprintf( lang_get( 'actiongroup_menu_update_field' ), lang_get_defaulted( $t_custom_field_def['name'] ) );
 		$t_button_title = $t_question_title;
 		$t_form = 'custom_field_' . $t_custom_field_id;
+		$t_event_params['custom_field_id'] = $t_custom_field_id;
 		break;
 	default:
 		trigger_error( ERROR_GENERIC, ERROR );
 }
+$t_event_params['has_bugnote'] = $t_bugnote;
+
 bug_group_action_print_top();
 ?>
 
@@ -283,9 +297,9 @@ if( $t_multiple_projects ) {
 				}
 			}
 
-			echo '<input type="text" id="due_date" name="due_date" class="datetimepicker input-sm" size="16" maxlength="20" ' .
+			echo '<input type="text" id="due_date" name="due_date" class="datetimepicker input-sm" size="16" maxlength="16" ' .
 				'data-picker-locale="' . lang_get_current_datetime_locale() .
-				'" data-picker-format="' . convert_date_format_to_momentjs( config_get( 'normal_date_format' ) ) . '"' .
+				'" data-picker-format="' . config_get( 'datetime_picker_format' ) . '"' .
 				'" value="' . $t_date_to_display . '" />';
 			echo '<i class="fa fa-calendar fa-xlg datetimepicker"></i>';
 		} else {
@@ -294,7 +308,8 @@ if( $t_multiple_projects ) {
 			switch( $f_action ) {
 				case 'COPY':
 				case 'MOVE':
-					print_project_option_list( null, false );
+					print_project_option_list( null /* $p_project_id */, false /* $p_include_all_projects */,
+							null /* $p_filter_project_id */, false /* $p_trace */, true /* $p_can_report_only */ );
 					break;
 				case 'ASSIGN':
 					print_assign_to_option_list( 0, $t_project_id );
@@ -362,14 +377,21 @@ if( $t_multiple_projects ) {
 <?php
 	}
 
+	# signal plugin event for additional fields
+	event_signal( 'EVENT_BUG_ACTIONGROUP_FORM', array( $t_event_params ) );
+
 	if( $t_bugnote ) {
+		$t_default_bugnote_view_status = config_get( 'default_bugnote_view_status' );
+		$t_bugnote_private = $t_default_bugnote_view_status == VS_PRIVATE;
+		$t_bugnote_class = $t_bugnote_private ? 'form-control bugnote-private' : 'form-control';
+
 ?>
 				<tr>
 					<th class="category">
 						<?php echo lang_get( 'add_bugnote_title' ); ?>
 					</th>
 					<td>
-						<textarea class="form-control" name="bugnote_text" cols="80" rows="10"></textarea>
+						<textarea name="bugnote_text" id="bugnote_text" class="<?php echo $t_bugnote_class ?>" cols="80" rows="7"></textarea>
 					</td>
 				</tr>
 <?php
@@ -381,11 +403,10 @@ if( $t_multiple_projects ) {
 					</th>
 					<td>
 <?php
-			$t_default_bugnote_view_status = config_get( 'default_bugnote_view_status' );
 			if( access_has_project_level( config_get( 'set_view_status_threshold' ), $t_project_id ) ) {
 ?>
 						<input type="checkbox" class="ace" name="private" <?php check_checked( $t_default_bugnote_view_status, VS_PRIVATE ); ?> />
-						<label class="lbl"> <?php echo lang_get( 'private' ); ?> </label>
+						<label class="lbl padding-6"><?php echo lang_get( 'private' ); ?></label>
 <?php
 			} else {
 				echo get_enum_element( 'project_view_state', $t_default_bugnote_view_status );

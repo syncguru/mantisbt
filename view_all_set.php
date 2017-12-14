@@ -106,7 +106,7 @@ if( ( $f_type == 3 ) && ( $f_source_query_id == -1 ) ) {
 # 	26: $f_show_profile
 
 # Set new filter values.  These are stored in a cookie
-$t_view_all_cookie_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
+$t_view_all_cookie_id = gpc_get_cookie( config_get_global( 'view_all_cookie' ), '' );
 $t_view_all_cookie = filter_db_get_filter( $t_view_all_cookie_id );
 
 # process the cookie if it exists, it may be blank in a new install
@@ -121,6 +121,8 @@ if( !is_blank( $t_view_all_cookie ) ) {
 			trigger_error( ERROR_FILTER_TOO_OLD, ERROR );
 			exit; # stop here
 		}
+	} else {
+		$t_setting_arr = filter_ensure_valid_filter( $t_setting_arr );
 	}
 } else {
 	# no cookie found, set it
@@ -161,6 +163,8 @@ switch( $f_type ) {
 			error_proceed_url( 'view_all_set.php?type=0' );
 			trigger_error( ERROR_FILTER_TOO_OLD, ERROR );
 			exit; # stop here
+		} else {
+			$t_setting_arr = filter_ensure_valid_filter( $t_setting_arr );
 		}
 		# Store the source query id to select the correct filter in the drop down.
 		$t_setting_arr['_source_query_id'] = $f_source_query_id;
@@ -221,7 +225,7 @@ if( !$f_temp_filter ) {
 	$t_row_id = filter_db_set_for_current_user( $t_project_id, false, '', $t_settings_string );
 
 	# set cookie values
-	gpc_set_cookie( config_get( 'view_all_cookie' ), $t_row_id, time()+config_get( 'cookie_time_length' ), config_get( 'cookie_path' ) );
+	gpc_set_cookie( config_get_global( 'view_all_cookie' ), $t_row_id, time()+config_get_global( 'cookie_time_length' ), config_get_global( 'cookie_path' ) );
 }
 
 # redirect to print_all or view_all page

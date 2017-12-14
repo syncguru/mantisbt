@@ -236,7 +236,7 @@ function layout_is_rtl() {
 
 /**
  * Print meta tags for the page head
- * @return null
+ * @return void
  */
 function layout_head_meta() {
 	# use the following meta to force IE use its most up to date rendering engine
@@ -247,7 +247,7 @@ function layout_head_meta() {
 
 /**
  * Print css link directives for the head section of the page
- * @return null
+ * @return void
  */
 function layout_head_css() {
 	# bootstrap & fontawesome
@@ -276,41 +276,19 @@ function layout_head_css() {
 	# theme styles
 	html_css_link( 'ace.min.css' );
 	html_css_link( 'ace-mantis.css' );
-
-	# handle IE separately
-	echo '<!--[if lte IE 9]>';
-	html_css_link( 'ace-part2.min.css' );
-	echo '<![endif]-->';
 	html_css_link( 'ace-skins.min.css' );
 
 	if( layout_is_rtl() ) {
 		html_css_link( 'ace-rtl.min.css' );
 	}
 
-	echo '<!--[if lte IE 9]>';
-	html_css_link( 'ace-ie.min.css' );
-	echo '<![endif]-->';
-	echo "\n";
-}
-
-
-/**
- * Print javascript directives for the head section of the page
- * @return null
- */
-function layout_head_javascript() {
-	# HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries
-	echo '<!--[if lte IE 8]>';
-	html_javascript_link( 'html5shiv.min.js' );
-	html_javascript_link( 'respond.min.js' );
-	echo '<![endif]-->';
 	echo "\n";
 }
 
 
 /**
  * Print javascript directives before the closing of the page body element
- * @return null
+ * @return void
  */
 function layout_body_javascript() {
 	if ( config_get_global( 'cdn_enabled' ) == ON ) {
@@ -348,7 +326,7 @@ function layout_body_javascript() {
 
 /**
  * Print opening markup for login/signup/register pages
- * @return null
+ * @return void
  */
 function layout_login_page_begin() {
 	html_begin();
@@ -388,7 +366,7 @@ function layout_login_page_begin() {
 
 /**
  * Print closing markup for login/signup/register pages
- * @return null
+ * @return void
  */
 function layout_login_page_end() {
 	echo '</div>';
@@ -401,15 +379,15 @@ function layout_login_page_end() {
 
 /**
  * Render navbar at the top of the page
- * @return null
+ * @return void
  */
 function layout_navbar() {
-	$t_logo_url = config_get('logo_url');
+	$t_logo_url = config_get_global('logo_url');
 
 	echo '<div id="navbar" class="navbar navbar-default navbar-collapse navbar-fixed-top noprint">';
 	echo '<div id="navbar-container" class="navbar-container">';
 
-	echo '<button id="menu-toggler" type="button" class="navbar-toggle menu-toggler pull-left hidden-lg" data-target="#sidebar">';
+	echo '<button id="menu-toggler" type="button" class="navbar-toggle menu-toggler pull-left hidden-lg hidden-md" data-target="#sidebar">';
 	echo '<span class="sr-only">Toggle sidebar</span>';
 	echo '<span class="icon-bar"></span>';
 	echo '<span class="icon-bar"></span>';
@@ -455,7 +433,7 @@ function layout_navbar() {
  * @param string $p_url destination url of the menu item
  * @param string $p_title menu item title
  * @param string $p_icon icon to use for this menu
- * @return null
+ * @return void
  */
 function layout_navbar_menu_item( $p_url, $p_title, $p_icon ) {
 	echo '<li>';
@@ -468,7 +446,7 @@ function layout_navbar_menu_item( $p_url, $p_title, $p_icon ) {
 /**
  * Print navbar user menu at the top right of the page
  * @param bool $p_show_avatar decide whether to show logged in user avatar
- * @return null
+ * @return void
  */
 function layout_navbar_user_menu( $p_show_avatar = true ) {
 	if( !auth_is_user_authenticated() ) {
@@ -480,7 +458,7 @@ function layout_navbar_user_menu( $p_show_avatar = true ) {
 	echo '<li class="grey">';
 	echo '<a data-toggle="dropdown" href="#" class="dropdown-toggle">';
 	if( $p_show_avatar ) {
-		layout_navbar_user_avatar( 'nav-user-photo' );
+		layout_navbar_user_avatar();
 		echo '<span class="user-info">';
 		echo $t_username;
 		echo '</span>';
@@ -505,7 +483,7 @@ function layout_navbar_user_menu( $p_show_avatar = true ) {
 	echo '<li class="divider"></li>';
 
 	# Logout
-	layout_navbar_menu_item( helper_mantis_url( 'logout_page.php' ), lang_get( 'logout_link' ), 'fa-sign-out' );
+	layout_navbar_menu_item( helper_mantis_url( auth_logout_page() ), lang_get( 'logout_link' ), 'fa-sign-out' );
 	echo '</ul>';
 	echo '</li>';
 }
@@ -513,7 +491,7 @@ function layout_navbar_user_menu( $p_show_avatar = true ) {
 
 /**
  * Print navbar projects menu at the top right of the page
- * @return null
+ * @return void
  */
 function layout_navbar_projects_menu() {
 	if( !auth_is_user_authenticated() ) {
@@ -531,7 +509,7 @@ function layout_navbar_projects_menu() {
 	}
 
 	if( $t_show_project_selector ) {
-		echo '<li class="grey">' . "\n";
+		echo '<li class="grey" id="dropdown_projects_menu">' . "\n";
 		echo '<a data-toggle="dropdown" href="#" class="dropdown-toggle">' . "\n";
 
 		$t_current_project_id = helper_get_current_project();
@@ -559,7 +537,7 @@ function layout_navbar_projects_menu() {
 
 			# Force reload of current page, except if we got here after
 			# creating the first project
-			$t_redirect_url = str_replace( config_get( 'short_path' ), '', $_SERVER['REQUEST_URI'] );
+			$t_redirect_url = str_replace( config_get_global( 'short_path' ), '', $_SERVER['REQUEST_URI'] );
 			if( 'manage_proj_create.php' != $t_redirect_url ) {
 				html_meta_redirect( $t_redirect_url, 0, false );
 			}
@@ -569,7 +547,7 @@ function layout_navbar_projects_menu() {
 
 /**
  * Print navbar bottons
- * @return null
+ * @return void
  */
 function layout_navbar_button_bar() {
 	if( !auth_is_user_authenticated() ) {
@@ -611,12 +589,17 @@ function layout_navbar_button_bar() {
  * @param int|null $p_filter_project_id  The id of a project to exclude or null.
  * @param string|bool $p_trace  The current project trace, identifies the sub-project via a path from top to bottom.
  * @param bool $p_can_report_only If true, disables projects in which user can't report issues; defaults to false (all projects enabled)
+ * @return void
  */
 function layout_navbar_projects_list( $p_project_id = null, $p_include_all_projects = true, $p_filter_project_id = null, $p_trace = false, $p_can_report_only = false ) {
 	$t_user_id = auth_get_current_user_id();
+
+	# Cache all needed projects
+	project_cache_array_rows( user_get_all_accessible_projects( $t_user_id ) );
+
+	# Get top level projects
 	$t_project_ids = user_get_accessible_projects( $t_user_id );
 	$t_can_report = true;
-	project_cache_array_rows( $t_project_ids );
 
 	if( $p_include_all_projects && $p_filter_project_id !== ALL_PROJECTS ) {
 		echo ALL_PROJECTS == $p_project_id ? '<li class="active">' : '<li>';
@@ -698,9 +681,9 @@ function layout_navbar_subproject_option_list( $p_parent_id, $p_project_id = nul
 /**
  * Print user avatar in the navbar
  * @param string $p_img_class css class to use with the img tag
- * @return null
+ * @return void
  */
-function layout_navbar_user_avatar( $p_img_class = '' ) {
+function layout_navbar_user_avatar( $p_img_class = 'nav' ) {
 	$t_default_avatar = '<i class="ace-icon fa fa-user fa-2x white"></i> ';
 
 	if( OFF === config_get( 'show_avatar' ) ) {
@@ -715,12 +698,9 @@ function layout_navbar_user_avatar( $p_img_class = '' ) {
 	}
 
 	if( access_has_project_level( config_get( 'show_avatar_threshold' ), null, $p_user_id ) ) {
-		$t_avatar = Avatar::get( $p_user_id, 32 );
+		$t_avatar = Avatar::get( $p_user_id, 40 );
 		if( false !== $t_avatar ) {
-			$t_image = htmlspecialchars( $t_avatar->image );
-			$t_text = htmlspecialchars( $t_avatar->text );
-
-			echo '<img class="nav-user-photo" src="' . $t_image . '" alt="' . $t_text . '" />';
+			echo prepare_raw_avatar( $t_avatar, $p_img_class, 40 );
 			return;
 		}
 	}
@@ -735,7 +715,6 @@ function layout_navbar_user_avatar( $p_img_class = '' ) {
  */
 function layout_print_sidebar( $p_active_sidebar_page = null ) {
 	if( auth_is_user_authenticated() ) {
-		$t_protected = current_user_get_field( 'protected' );
 		$t_current_project = helper_get_current_project();
 
 		# Starting sidebar markup
@@ -763,17 +742,17 @@ function layout_print_sidebar( $p_active_sidebar_page = null ) {
 		}
 
 		# Changelog Page
-		if( access_has_project_level( config_get( 'view_changelog_threshold' ) ) ) {
+		if( access_has_project_level( config_get( 'view_changelog_threshold', $t_current_project ) ) ) {
 			layout_sidebar_menu( 'changelog_page.php', 'changelog_link', 'fa-retweet', $p_active_sidebar_page );
 		}
 
 		# Roadmap Page
-		if( access_has_project_level( config_get( 'roadmap_view_threshold' ) ) ) {
+		if( access_has_project_level( config_get( 'roadmap_view_threshold' ), $t_current_project ) ) {
 			layout_sidebar_menu( 'roadmap_page.php', 'roadmap_link', 'fa-road', $p_active_sidebar_page );
 		}
 
 		# Summary Page
-		if( access_has_project_level( config_get( 'view_summary_threshold' ) ) ) {
+		if( access_has_project_level( config_get( 'view_summary_threshold' ), $t_current_project ) ) {
 			layout_sidebar_menu( 'summary_page.php', 'summary_link', 'fa-bar-chart-o', $p_active_sidebar_page );
 		}
 
@@ -791,13 +770,14 @@ function layout_print_sidebar( $p_active_sidebar_page = null ) {
 		if( access_has_global_level( config_get( 'manage_site_threshold' ) ) ) {
 			layout_sidebar_menu( 'manage_overview_page.php', 'manage_link', 'fa-gears', $p_active_sidebar_page );
 		} else {
-			$t_show_access = min( config_get( 'manage_user_threshold' ), config_get( 'manage_project_threshold' ), config_get( 'manage_custom_fields_threshold' ) );
-			if( access_has_global_level( $t_show_access ) || access_has_any_project( $t_show_access ) ) {
-				$t_current_project = helper_get_current_project();
-				if( access_has_global_level( config_get( 'manage_user_threshold' ) ) ) {
+			$t_show_manage_user = access_has_global_level( config_get( 'manage_user_threshold' ) );
+			$t_show_manage_custom_fields = access_has_global_level( config_get( 'manage_custom_fields_threshold' ) );
+			$t_show_manage_project = access_has_any_project_level( 'manage_project_threshold' );
+			if( $t_show_manage_user || $t_show_manage_custom_fields || $t_show_manage_project ) {
+				if( $t_show_manage_user ) {
 					$t_link = 'manage_user_page.php';
 				} else {
-					if( access_has_project_level( config_get( 'manage_project_threshold' ), $t_current_project ) && ( $t_current_project <> ALL_PROJECTS ) ) {
+					if( $t_show_manage_project && ( $t_current_project <> ALL_PROJECTS ) ) {
 						$t_link = 'manage_proj_edit_page.php?project_id=' . $t_current_project;
 					} else {
 						$t_link = 'manage_proj_page.php';
@@ -808,7 +788,7 @@ function layout_print_sidebar( $p_active_sidebar_page = null ) {
 		}
 
 		# Time Tracking / Billing
-		if( config_get( 'time_tracking_enabled' ) && access_has_global_level( config_get( 'time_tracking_reporting_threshold' ) ) ) {
+		if( config_get( 'time_tracking_enabled' ) && access_has_project_level( config_get( 'time_tracking_reporting_threshold', $t_current_project ) ) ) {
 			layout_sidebar_menu( 'billing_page.php', 'time_tracking_billing_link', 'fa-clock-o', $p_active_sidebar_page );
 		}
 
@@ -899,7 +879,7 @@ function layout_options_for_sidebar( $p_menu_options, $p_active_sidebar_page ) {
 
 /**
  * Print sidebar opening elements
- * @return null
+ * @return void
  */
 function layout_sidebar_begin() {
 	$t_collapse_block = is_collapsed( 'sidebar' );
@@ -917,7 +897,7 @@ function layout_sidebar_begin() {
  * @param string $p_title menu title in english
  * @param string $p_icon icon to use for this menu
  * @param string $p_active_sidebar_page page name to set as active
- * @return null
+ * @return void
  */
 function layout_sidebar_menu( $p_page, $p_title, $p_icon, $p_active_sidebar_page = null ) {
 	if( $p_page == $p_active_sidebar_page ||
@@ -945,7 +925,7 @@ function layout_sidebar_menu( $p_page, $p_title, $p_icon, $p_active_sidebar_page
 
 /**
  * Print sidebar closing elements
- * @return null
+ * @return void
  */
 function layout_sidebar_end() {
 	echo '</ul>';
@@ -968,7 +948,7 @@ function layout_sidebar_end() {
 
 /**
  * Render opening markup for main container
- * @return null
+ * @return void
  */
 function layout_main_container_begin() {
 	echo '<div class="main-container" id="main-container">', "\n";
@@ -976,7 +956,7 @@ function layout_main_container_begin() {
 
 /**
  * Render closing markup for main container
- * @return null
+ * @return void
  */
 function layout_main_container_end() {
 	echo '</div>' , "\n";
@@ -984,7 +964,7 @@ function layout_main_container_end() {
 
 /**
  * Render opening markup for main content
- * @return null
+ * @return void
  */
 function layout_main_content_begin() {
 	echo '<div class="main-content">' , "\n";
@@ -992,7 +972,7 @@ function layout_main_content_begin() {
 
 /**
  * Render closing markup for main content
- * @return null
+ * @return void
  */
 function layout_main_content_end() {
 	echo '</div>' , "\n";
@@ -1000,7 +980,7 @@ function layout_main_content_end() {
 
 /**
  * Render opening markup for main page content
- * @return null
+ * @return void
  */
 function layout_page_content_begin() {
 	echo '  <div class="page-content">' , "\n";
@@ -1008,16 +988,19 @@ function layout_page_content_begin() {
 
 /**
  * Render closing markup for main page content
- * @return null
+ * @return void
  */
 function layout_page_content_end() {
+	# Print table of log events
+	log_print_to_page();
+
 	echo '</div>' , "\n";
 }
 
 
 /**
  * Render breadcrumbs bar.
- * @return null
+ * @return void
  */
 function layout_breadcrumbs() {
 	echo '<div id="breadcrumbs" class="breadcrumbs noprint">' , "\n";
@@ -1026,7 +1009,7 @@ function layout_breadcrumbs() {
 	echo '<ul class="breadcrumb">' , "\n";
 	if( current_user_is_anonymous() ) {
 		$t_return_page = $_SERVER['SCRIPT_NAME'];
-		if( isset( $_SERVER['QUERY_STRING'] ) ) {
+		if( isset( $_SERVER['QUERY_STRING'] ) && !is_blank( $_SERVER['QUERY_STRING'] )) {
 			$t_return_page .= '?' . $_SERVER['QUERY_STRING'];
 		}
 
@@ -1035,9 +1018,9 @@ function layout_breadcrumbs() {
 		echo ' <li><i class="fa fa-user home-icon active"></i> ' . lang_get( 'anonymous' ) . ' </li>' . "\n";
 
 		echo '<div class="btn-group btn-corner">' . "\n";
-		echo '	<a href="' . helper_mantis_url( 'login_page.php?return=' . $t_return_page ) .
+		echo '	<a href="' . helper_mantis_url( auth_login_page( 'return=' . $t_return_page ) ) .
 			'" class="btn btn-primary btn-xs">' . lang_get( 'login_link' ) . '</a>' . "\n";
-		if( config_get_global( 'allow_signup' ) == ON ) {
+		if( auth_signup_enabled() ) {
 			echo '	<a href="' . helper_mantis_url( 'signup_page.php' ) . '" class="btn btn-primary btn-xs">' .
 				lang_get( 'signup_link' ) . '</a>' . "\n";
 		}
@@ -1108,9 +1091,13 @@ function layout_footer() {
 	# We do this at the end of the page so that:
 	#  1) we can display the user's last visit time on a page before updating it
 	#  2) we don't invalidate the user cache immediately after fetching it
-	#  3) don't do this on the password verification or update page, as it causes the
+	#  3) don't do this on pages that auto-refresh
+	#  4) don't do this on the password verification or update page, as it causes the
 	#    verification comparison to fail
-	if( auth_is_user_authenticated() && !current_user_is_anonymous() && !( is_page_name( 'verify.php' ) || is_page_name( 'account_update.php' ) ) ) {
+	if( !gpc_get_bool( 'refresh' ) &&
+		auth_is_user_authenticated() &&
+		!current_user_is_anonymous() &&
+		!( is_page_name( 'verify.php' ) || is_page_name( 'account_update.php' ) ) ) {
 		$t_user_id = auth_get_current_user_id();
 		user_update_last_visit( $t_user_id );
 	}
@@ -1161,7 +1148,7 @@ function layout_footer() {
 
 	event_signal( 'EVENT_LAYOUT_PAGE_FOOTER' );
 
-	if( config_get( 'show_timer' ) || config_get( 'show_memory_usage' ) || config_get( 'show_queries_count' ) ) {
+	if( config_get( 'show_timer' ) || config_get( 'show_memory_usage' ) || config_get_global( 'show_queries_count' ) ) {
 		echo '<div class="col-xs-12 no-padding grey">' . "\n";
 		echo '<address class="no-margin pull-right">' . "\n";
 	}
@@ -1180,7 +1167,7 @@ function layout_footer() {
 	}
 
 	# Determine number of unique queries executed
-	if( config_get( 'show_queries_count' ) ) {
+	if( config_get_global( 'show_queries_count' ) ) {
 		$t_total_queries_count = count( $g_queries_array );
 		$t_unique_queries_count = 0;
 		$t_total_query_execution_time = 0;
@@ -1206,20 +1193,17 @@ function layout_footer() {
 		echo '<small><i class="fa fa-clock-o"></i> ' . $t_total_query_time . '</small>&#160;&#160;&#160;&#160;' . "\n";
 	}
 
-	if( config_get( 'show_timer' ) || config_get( 'show_memory_usage' ) || config_get( 'show_queries_count' ) ) {
+	if( config_get( 'show_timer' ) || config_get( 'show_memory_usage' ) || config_get_global( 'show_queries_count' ) ) {
 		echo '</address>' . "\n";
 		echo '</div>' . "\n";
 	}
-
-	# Print table of log events
-	log_print_to_page();
 
 	layout_footer_end();
 }
 
 /**
  * Render opening markup for footer section
- * @return null
+ * @return void
  */
 function layout_footer_begin() {
 	echo '<div class="clearfix"></div>' . "\n";
@@ -1231,7 +1215,7 @@ function layout_footer_begin() {
 
 /**
  * Render closing markup for footer section
- * @return null
+ * @return void
  */
 function layout_footer_end() {
 	echo '</div>' . "\n";
@@ -1241,10 +1225,22 @@ function layout_footer_end() {
 
 /**
  * Render scroll up link to go at the bottom of the page
- * @return null
+ * @return void
  */
 function layout_scroll_up_button() {
 	echo '<a class="btn-scroll-up btn btn-sm btn-inverse display" id="btn-scroll-up" href="#">' . "\n";
 	echo '<i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>' . "\n";
 	echo '</a>' . "\n";
+}
+
+/**
+ * Render the div area with logo used in login pages
+ * @return void
+ */
+function layout_login_page_logo() {
+	?>
+	<div class="login-logo">
+		<img src="<?php echo helper_mantis_url( config_get( 'logo_image' ) ); ?>">
+	</div>
+	<?php
 }

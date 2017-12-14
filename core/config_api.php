@@ -132,29 +132,19 @@ function config_get( $p_option, $p_default = null, $p_user = null, $p_project = 
 			# @@ debug @@ echo 'pr= '; var_dump($t_projects);
 			# @@ debug @@ echo 'u= '; var_dump($t_users);
 			if( !$g_cache_filled ) {
-				$t_query = 'SELECT config_id, user_id, project_id, type, value, access_reqd FROM {config}';
-				$t_result = db_query( $t_query );
-				while( false <> ( $t_row = db_fetch_array( $t_result ) ) ) {
-					$t_config = $t_row['config_id'];
-					$t_user = $t_row['user_id'];
-					$t_project = $t_row['project_id'];
-					$g_cache_config[$t_config][$t_user][$t_project] = $t_row['type'] . ';' . $t_row['value'];
-					$g_cache_config_access[$t_config][$t_user][$t_project] = $t_row['access_reqd'];
-				}
+				config_cache_all();
 				$g_cache_filled = true;
 			}
 
 			if( isset( $g_cache_config[$p_option] ) ) {
 				$t_found = false;
-				reset( $t_users );
-				while( ( list(, $t_user ) = each( $t_users ) ) && !$t_found ) {
-					reset( $t_projects );
-					while( ( list(, $t_project ) = each( $t_projects ) ) && !$t_found ) {
+				foreach( $t_users as $t_user ) {
+					foreach( $t_projects as $t_project ) {
 						if( isset( $g_cache_config[$p_option][$t_user][$t_project] ) ) {
 							$t_value = $g_cache_config[$p_option][$t_user][$t_project];
 							$t_found = true;
-
 							# @@ debug @@ echo "clu found u=$t_user, p=$t_project, v=$t_value ";
+							break 2;
 						}
 					}
 				}
@@ -250,13 +240,12 @@ function config_get_access( $p_option, $p_user = null, $p_project = null ) {
 
 	$t_found = false;
 	if( isset( $g_cache_config[$p_option] ) ) {
-		reset( $t_users );
-		while( ( list(, $t_user ) = each( $t_users ) ) && !$t_found ) {
-			reset( $t_projects );
-			while( ( list(, $t_project ) = each( $t_projects ) ) && !$t_found ) {
+		foreach( $t_users as $t_user ) {
+			foreach( $t_projects as $t_project ) {
 				if( isset( $g_cache_config[$p_option][$t_user][$t_project] ) ) {
 					$t_access = $g_cache_config_access[$p_option][$t_user][$t_project];
 					$t_found = true;
+					break 2;
 				}
 			}
 		}
@@ -302,12 +291,11 @@ function config_is_set( $p_option, $p_user = null, $p_project = null ) {
 	}
 
 	$t_found = false;
-	reset( $t_users );
-	while( ( list(, $t_user ) = each( $t_users ) ) && !$t_found ) {
-		reset( $t_projects );
-		while( ( list(, $t_project ) = each( $t_projects ) ) && !$t_found ) {
+	foreach( $t_users as $t_user ) {
+		foreach( $t_projects as $t_project ) {
 			if( isset( $g_cache_config[$p_option][$t_user][$t_project] ) ) {
 				$t_found = true;
+				break 2;
 			}
 		}
 	}
@@ -726,4 +714,49 @@ function config_is_defined( $p_option, $p_value = null ) {
 
 	# Value not found in cache
 	return false;
+}
+
+/**
+ * Loads the contents of config table into cache
+ * @return void
+ */
+function config_cache_all() {
+	global $g_cache_config, $g_cache_config_access;
+
+	$t_config_rows = array();
+
+	# With oracle databse, ADOdb maps column type "L" to clob.
+	# Because reading clobs is significantly slower, cast them to varchar for faster query execution
+	# Standard max size for varchar is 4000 bytes, so a safe limit is used as 1000 charancters
+	# for multibyte strings (up to 4 bytes per char)
+	if( db_is_oracle() ) {
+		$t_query = 'SELECT config_id, user_id, project_id, type, CAST(value AS VARCHAR(4000)) AS value, access_reqd'
+				. ' FROM {config}'
+				. ' WHERE dbms_lob.getlength(value)<=1000';
+		$t_result = db_query( $t_query );
+		while( $t_row = db_fetch_array( $t_result ) ) {
+			$t_config_rows[] = $t_row;
+		}
+		$t_query = 'SELECT config_id, user_id, project_id, type,  value, access_reqd'
+				. ' FROM {config}'
+				. ' WHERE dbms_lob.getlength(value)>1000';
+		$t_result = db_query( $t_query );
+		while( $t_row = db_fetch_array( $t_result ) ) {
+			$t_config_rows[] = $t_row;
+		}
+	} else {
+		$t_query = 'SELECT config_id, user_id, project_id, type,  value, access_reqd FROM {config}';
+		$t_result = db_query( $t_query );
+		while( false <> ( $t_row = db_fetch_array( $t_result ) ) ) {
+			$t_config_rows[] = $t_row;
+		}
+	}
+
+	foreach( $t_config_rows as $t_row ) {
+		$t_config = $t_row['config_id'];
+		$t_user = $t_row['user_id'];
+		$t_project = $t_row['project_id'];
+		$g_cache_config[$t_config][$t_user][$t_project] = $t_row['type'] . ';' . $t_row['value'];
+		$g_cache_config_access[$t_config][$t_user][$t_project] = $t_row['access_reqd'];
+	}
 }

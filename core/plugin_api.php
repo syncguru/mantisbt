@@ -35,6 +35,7 @@
  * @uses helper_api.php
  * @uses history_api.php
  * @uses lang_api.php
+ * @uses logging_api.php
  */
 
 require_api( 'access_api.php' );
@@ -46,6 +47,7 @@ require_api( 'event_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'history_api.php' );
 require_api( 'lang_api.php' );
+require_api( 'logging_api.php' );
 
 # Cache variables #####
 
@@ -141,13 +143,29 @@ function plugin_page( $p_page, $p_redirect = false, $p_base_name = null ) {
 }
 
 /**
+ * Gets the route group (base path under '/api/rest', e.g. /plugins/Example
+ *
+ * @param string $p_base_name The basename for plugin or null for current plugin.
+ * @return string The route group path to use.
+ */
+function plugin_route_group( $p_base_name = null ) {
+	if( is_null( $p_base_name ) ) {
+		$t_current = plugin_get_current();
+	} else {
+		$t_current = $p_base_name;
+	}
+
+	return '/plugins/' . $t_current;
+}
+
+/**
  * Return a path to a plugin file.
  * @param string $p_filename  File name.
  * @param string $p_base_name Plugin base name.
  * @return mixed File path or false if FNF
  */
 function plugin_file_path( $p_filename, $p_base_name ) {
-	$t_file_path = config_get( 'plugin_path' );
+	$t_file_path = config_get_global( 'plugin_path' );
 	$t_file_path .= $p_base_name . DIRECTORY_SEPARATOR;
 	$t_file_path .= 'files' . DIRECTORY_SEPARATOR . $p_filename;
 
@@ -631,6 +649,8 @@ function plugin_needs_upgrade( MantisPlugin $p_plugin ) {
 
 /**
  * Upgrade an installed plugin's schema.
+ * This is mostly identical to the code in the MantisBT installer, and should
+ * be reviewed and updated accordingly whenever that changes.
  * @param MantisPlugin $p_plugin Plugin basename.
  * @return boolean|null True if upgrade completed, null if problem
  */
@@ -658,24 +678,41 @@ function plugin_upgrade( MantisPlugin $p_plugin ) {
 
 		$t_target = $t_schema[$i][1][0];
 
-		if( $t_schema[$i][0] == 'InsertData' ) {
-			$t_sqlarray = array(
-				'INSERT INTO ' . $t_schema[$i][1][0] . $t_schema[$i][1][1],
-			);
-		} else if( $t_schema[$i][0] == 'UpdateSQL' ) {
-			$t_sqlarray = array(
-				'UPDATE ' . $t_schema[$i][1][0] . $t_schema[$i][1][1],
-			);
-			$t_target = $t_schema[$i][1];
-		} else if( $t_schema[$i][0] == 'UpdateFunction' ) {
-			$t_sqlarray = false;
-			if( isset( $t_schema[$i][2] ) ) {
-				$t_status = call_user_func( 'install_' . $t_schema[$i][1], $t_schema[$i][2] );
-			} else {
-				$t_status = call_user_func( 'install_' . $t_schema[$i][1] );
-			}
-		} else {
-			$t_sqlarray = call_user_func_array( array( $t_dict, $t_schema[$i][0] ), $t_schema[$i][1] );
+		switch( $t_schema[$i][0] ) {
+			case 'InsertData':
+				$t_sqlarray = array(
+					'INSERT INTO ' . $t_schema[$i][1][0] . $t_schema[$i][1][1],
+				);
+				break;
+
+			case 'UpdateSQL':
+				$t_sqlarray = array(
+					'UPDATE ' . $t_schema[$i][1][0] . $t_schema[$i][1][1],
+				);
+				$t_target = $t_schema[$i][1];
+				break;
+
+			case 'UpdateFunction':
+				$t_sqlarray = false;
+				if( isset( $t_schema[$i][2] ) ) {
+					$t_status = call_user_func( 'install_' . $t_schema[$i][1], $t_schema[$i][2] );
+				} else {
+					$t_status = call_user_func( 'install_' . $t_schema[$i][1] );
+				}
+				break;
+
+			case null:
+				# No-op upgrade step
+				$t_sqlarray = false;
+				$t_status = 2;
+				break;
+
+			default:
+				$t_sqlarray = call_user_func_array(
+					array( $t_dict, $t_schema[$i][0] ),
+					$t_schema[$i][1]
+				);
+				$t_status = false;
 		}
 
 		if( $t_sqlarray ) {
@@ -979,5 +1016,22 @@ function plugin_init( $p_basename ) {
 		return true;
 	} else {
 		return false;
+	}
+}
+
+function plugin_log_event( $p_msg, $p_basename = null ) {
+	$t_current_plugin = plugin_get_current();
+	if( is_null( $p_basename ) ) {
+		$t_basename = $t_current_plugin;
+	} else {
+		$t_basename = $p_basename;
+	}
+
+	if( $t_basename != $t_current_plugin ) {
+		plugin_push_current( $t_basename );
+		log_event( LOG_PLUGIN, $p_msg);
+		plugin_pop_current();
+	} else {
+		log_event( LOG_PLUGIN, $p_msg);
 	}
 }

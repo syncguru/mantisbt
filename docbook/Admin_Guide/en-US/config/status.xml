@@ -47,7 +47,7 @@
 					When a note is added to a bug currently in $g_bug_feedback_status, and the note
 					author is the bug's reporter, this option will automatically set the bug status
 					to $g_bug_submit_status or $g_bug_assigned_status if the bug is assigned to a
-					developer.  Defaults to enabled.
+					developer.  Default value is ON.
 				</para>
 			</listitem>
 		</varlistentry>
@@ -100,7 +100,7 @@
 			<listitem>
 				<para>Threshold resolution which denotes that a bug has
 					been resolved and successfully fixed by developers.
-					Resolutions above this threshold and below
+					Resolutions above and including this threshold and below
 					$g_bug_resolution_not_fixed_threshold are considered
 					to be resolved successfully. Default value is FIXED.
 				</para>
@@ -113,7 +113,7 @@
 					been resolved without being successfully fixed by
 					developers. Resolutions above this threshold are
 					considered to be resolved in an unsuccessful way.
-					Default value is UNABLE_TO_DUPLICATE.
+					Default value is UNABLE_TO_REPRODUCE.
 				</para>
 			</listitem>
 		</varlistentry>
@@ -225,6 +225,15 @@
 					once resolved, regardless of their access level. This allows the
 					reporter to disagree with the resolution. The default is
 					ON.
+				</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>$g_allow_parent_of_unresolved_to_close</term>
+			<listitem>
+				<para>If set, no check is performed on the status of a bug's children,
+					which allows the parent to be closed whether or not the children
+					have been resolved. The default is OFF.
 				</para>
 			</listitem>
 		</varlistentry>

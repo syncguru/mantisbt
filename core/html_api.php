@@ -50,6 +50,7 @@
  * @uses user_api.php
  * @uses utility_api.php
  * @uses layout_api.php
+ * @uses api_token_api.php
  */
 
 require_api( 'access_api.php' );
@@ -76,6 +77,7 @@ require_api( 'string_api.php' );
 require_api( 'user_api.php' );
 require_api( 'utility_api.php' );
 require_api( 'layout_api.php' );
+require_api( 'api_token_api.php' );
 
 $g_rss_feed_url = null;
 
@@ -206,13 +208,22 @@ function require_css( $p_stylesheet_path ) {
  */
 function html_css() {
 	global $g_stylesheets_included;
-	html_css_link( config_get( 'css_include_file' ) );
-	html_css_link( 'common_config.php' );
+	html_css_link( config_get_global( 'css_include_file' ) );
 	# Add right-to-left css if needed
 	if( lang_get( 'directionality' ) == 'rtl' ) {
-		html_css_link( config_get( 'css_rtl_include_file' ) );
+		html_css_link( config_get_global( 'css_rtl_include_file' ) );
 	}
 	foreach( $g_stylesheets_included as $t_stylesheet_path ) {
+		# status_config.php is a special css file, dynamically generated.
+		# Add a hash to the query string to differentiate content based on its
+		# relevant properties. This allows a browser to cache them separately and force
+		# a reload when the content may differ.
+		if( $t_stylesheet_path == 'status_config.php' ) {
+			$t_stylesheet_path = helper_url_combine(
+				helper_mantis_url( 'css/status_config.php' ),
+				'cache_key=' . helper_generate_cache_key( array( 'user' ) )
+			);
+		}
 		html_css_link( $t_stylesheet_path );
 	}
 
@@ -266,7 +277,7 @@ function html_meta_redirect( $p_url, $p_time = null, $p_sanitize = true ) {
 		$p_time = current_user_get_pref( 'redirect_delay' );
 	}
 
-	$t_url = config_get( 'path' );
+	$t_url = config_get_global( 'path' );
 	if( $p_sanitize ) {
 		$t_url .= string_sanitize_url( $p_url );
 	} else {
@@ -296,8 +307,19 @@ function require_js( $p_script_path ) {
  */
 function html_head_javascript() {
 	global $g_scripts_included;
-	echo "\t" . '<script type="text/javascript" src="' . helper_mantis_url( 'javascript_config.php' ) . '"></script>' . "\n";
-	echo "\t" . '<script type="text/javascript" src="' . helper_mantis_url( 'javascript_translations.php' ) . '"></script>' . "\n";
+	# Add a hash to the query string to differentiate content based on its
+	# relevant properties. This allows a browser to cache them separately and force
+	# a reload when the content may differ.
+	$t_javascript_translations = helper_url_combine(
+		helper_mantis_url( 'javascript_translations.php' ),
+		'cache_key=' . helper_generate_cache_key( array( 'lang' ) )
+	);
+	$t_javascript_config = helper_url_combine(
+		helper_mantis_url( 'javascript_config.php' ),
+		'cache_key=' . helper_generate_cache_key( array( 'user' ) )
+	);
+	echo "\t" . '<script type="text/javascript" src="' . $t_javascript_config . '"></script>' . "\n";
+	echo "\t" . '<script type="text/javascript" src="' . $t_javascript_translations . '"></script>' . "\n";
 
 	if ( config_get_global( 'cdn_enabled' ) == ON ) {
 		# JQuery
@@ -339,11 +361,11 @@ function html_print_logo( $p_logo = null ) {
 	}
 
 	if( !is_blank( $p_logo ) ) {
-		$t_logo_url = config_get( 'logo_url' );
+		$t_logo_url = config_get_global( 'logo_url' );
 		$t_show_url = !is_blank( $t_logo_url );
 
 		if( $t_show_url ) {
-			echo '<a id="logo-link" href="', config_get( 'logo_url' ), '">';
+			echo '<a id="logo-link" href="', config_get_global( 'logo_url' ), '">';
 		}
 		$t_alternate_text = string_html_specialchars( config_get( 'window_title' ) );
 		echo '<img id="logo-image" alt="', $t_alternate_text, '" style="max-height: 80px;" src="' . helper_mantis_url( $p_logo ) . '" />';
@@ -360,7 +382,7 @@ function html_print_logo( $p_logo = null ) {
  * @return void
  */
 function html_top_banner() {
-	$t_page = config_get( 'top_include_page' );
+	$t_page = config_get_global( 'top_include_page' );
 	$t_logo_image = config_get( 'logo_image' );
 
 	if( !is_blank( $t_page ) && file_exists( $t_page ) && !is_dir( $t_page ) ) {
@@ -584,7 +606,9 @@ function print_summary_submenu() {
 function print_manage_menu( $p_page = '' ) {
 	$t_pages = array();
 
-	$t_pages['manage_overview_page.php'] = array( 'url'   => 'manage_overview_page.php', 'label' => '' );
+	if( access_has_global_level( config_get( 'manage_site_threshold' ) ) ) {
+		$t_pages['manage_overview_page.php'] = array( 'url'   => 'manage_overview_page.php', 'label' => '' );
+	}
 	if( access_has_global_level( config_get( 'manage_user_threshold' ) ) ) {
 		$t_pages['manage_user_page.php'] = array( 'url'   => 'manage_user_page.php', 'label' => 'manage_users_link' );
 	}
@@ -638,9 +662,12 @@ function print_manage_menu( $p_page = '' ) {
 		echo '</li>' . "\n";
 	}
 
-	# Plugins menu items - these are cooked links
+	# Plugins menu items - these are html hyperlinks (<a> tags)
 	foreach( $t_menu_options as $t_menu_item ) {
-		echo '<li>', $t_menu_item, '</li>';
+		$t_active = $p_page && strpos( $t_menu_item, $p_page ) !== false
+			? ' class="active"'
+			: '';
+		echo "<li{$t_active}>", $t_menu_item, '</li>';
 	}
 
 	echo '</ul>' . "\n";
@@ -739,7 +766,9 @@ function print_account_menu( $p_page = '' ) {
 		$t_pages['account_sponsor_page.php'] = array( 'url'=>'account_sponsor_page.php', 'label'=>'my_sponsorship' );
 	}
 
-	$t_pages['api_tokens_page.php'] = array( 'url' => 'api_tokens_page.php', 'label' => 'api_tokens_link' );
+	if( api_token_can_create() ) {
+		$t_pages['api_tokens_page.php'] = array( 'url' => 'api_tokens_page.php', 'label' => 'api_tokens_link' );
+	}
 
 	# Plugin / Event added options
 	$t_event_menu_options = event_signal( 'EVENT_MENU_ACCOUNT' );
@@ -780,7 +809,7 @@ function print_account_menu( $p_page = '' ) {
  */
 function print_doc_menu( $p_page = '' ) {
 	# User Documentation
-	$t_doc_url = config_get( 'manual_url' );
+	$t_doc_url = config_get_global( 'manual_url' );
 	if( is_null( parse_url( $t_doc_url, PHP_URL_SCHEME ) ) ) {
 		# URL has no scheme, so it is relative to MantisBT root
 		if( is_blank( $t_doc_url ) ||
@@ -988,10 +1017,8 @@ function html_button_bug_change_status( BugData $p_bug ) {
 
 	if( count( $t_enum_list ) > 0 ) {
 		# resort the list into ascending order after noting the key from the first element (the default)
-		$t_default_arr = each( $t_enum_list );
-		$t_default = $t_default_arr['key'];
+		$t_default = key( $t_enum_list );
 		ksort( $t_enum_list );
-		reset( $t_enum_list );
 
 		echo '<form method="post" action="bug_change_status_page.php" class="form-inline">';
 		# CSRF protection not required here - form does not result in modifications
@@ -1577,7 +1604,7 @@ class TableFieldsItem {
 			$p_colspan = 1;
 		}
 		$this->colspan = $p_colspan;
-		$this->atr_class = $p_class;
+		$this->attr_class = $p_class;
 		$this->content_attr_id = $p_content_id;
 		$this->header_attr_id = $p_header_id;
 	}

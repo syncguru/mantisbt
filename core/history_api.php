@@ -179,62 +179,139 @@ function history_count_user_recent_events( $p_duration_in_seconds, $p_user_id = 
 }
 
 /**
+ * Creates and executes a query for the history rows, returning a database result object.
+ * Query options is an array with parameters to build the query.
+ *
+ * Supported options are:
+ * - "bug_id" => integer | array    Limit search to these bug ids.
+ * - "start_time" => integer        Timestamp for start time to filter by (inclusive)
+ * - "end_time" => integer          Timestamp for end time to filter by (exclusive)
+ * - "user_id" => integer | array   Limit search to actions by these user ids.
+ * - "filter" => filter array       A filter array to limit history to bugs matched by this filter.
+ * - "order" => Sort order          'ASC' or 'DESC' for result order.
+ *
+ * Any option can be omitted.
+ *
+ * @param array $p_query_options	Array of query options
+ * @return database result to pass into history_get_event_from_row().
+ */
+function history_query_result( array $p_query_options ) {
+	# check query order by
+	if( isset( $p_query_options['order'] ) ) {
+		$t_history_order = $p_query_options['order'];
+	} else {
+		$t_history_order = config_get( 'history_order' );
+	}
+
+	$t_where = array();
+
+	# if a filter is provided, prepare subselect
+	if( isset( $p_query_options['filter'] ) ) {
+		# Note: filter_get_bug_rows_query_clauses() calls db_param_push();
+		$t_query_clauses = filter_get_bug_rows_query_clauses( $p_query_options['filter'], null, null, null );
+		# if the query can't be formed, there are no results
+		if( empty( $t_query_clauses ) ) {
+			# reset the db_param stack that was initialized by "filter_get_bug_rows_query_clauses()"
+			db_param_pop();
+			return db_empty_result();
+		}
+		$t_select_string = 'SELECT {bug}.id ';
+		$t_from_string = ' FROM ' . implode( ', ', $t_query_clauses['from'] );
+		$t_join_string = count( $t_query_clauses['join'] ) > 0 ? implode( ' ', $t_query_clauses['join'] ) : ' ';
+		$t_where_string = ' WHERE '. implode( ' AND ', $t_query_clauses['project_where'] );
+		if( count( $t_query_clauses['where'] ) > 0 ) {
+			$t_where_string .= ' AND ( ';
+			$t_where_string .= implode( $t_query_clauses['operator'], $t_query_clauses['where'] );
+			$t_where_string .= ' ) ';
+		}
+		$t_where[] = '{bug_history}.bug_id IN'
+			. ' ( ' . $t_select_string . $t_from_string . $t_join_string . $t_where_string . ' )';
+		$t_params = $t_query_clauses['where_values'];
+	} else {
+		db_param_push();
+		$t_params = array();
+	}
+
+	# Start time
+	if( isset( $p_query_options['start_time'] ) ) {
+		$t_where[] = '{bug_history}.date_modified >= ' . db_param();
+		$t_params[] = $p_query_options['start_time'];
+	}
+
+	# End time
+	if( isset( $p_query_options['end_time'] ) ) {
+		$t_where[] = '{bug_history}.date_modified < ' . db_param();
+		$t_params[] = $p_query_options['end_time'];
+	}
+
+	# Bug ids
+	if( isset( $p_query_options['bug_id'] ) ) {
+		if( is_array( $p_query_options['bug_id'] ) ) {
+			$t_in_strparams = array();
+			foreach ( $p_query_options['bug_id'] as $t_id ) {
+				$t_in_strparams[] = db_param();
+				$t_params[] = $t_id;
+			}
+			$t_in_str = '{bug_history}.bug_id IN (' . implode( ',', $t_in_strparams ) . ')';
+		} else {
+			$t_where[] = '{bug_history}.bug_id = ' . db_param();
+			$t_params[] = $p_query_options['bug_id'];
+		}
+	}
+
+	# User ids
+	if( isset( $p_query_options['user_id'] ) ) {
+		if( is_array( $p_query_options['user_id'] ) ) {
+			$t_in_strparams = array();
+			foreach ( $p_query_options['user_id'] as $t_id ) {
+				$t_in_strparams[] = db_param();
+				$t_params[] = $t_id;
+			}
+			$t_in_str = '{bug_history}.user_id IN (' . implode( ',', $t_in_strparams ) . ')';
+		} else {
+			$t_where[] = '{bug_history}.user_id = ' . db_param();
+			$t_params[] = $p_query_options['user_id'];
+		}
+	}
+
+	$t_query = 'SELECT * FROM {bug_history}';
+	if ( count( $t_where ) > 0 ) {
+		$t_query .= ' WHERE ' . implode( ' AND ', $t_where );
+	}
+
+	# Order history lines by date. Use the storing sequence as 2nd order field for lines with the same date.
+	$t_query .= ' ORDER BY {bug_history}.date_modified ' . $t_history_order . ', {bug_history}.id ' . $t_history_order;
+	$t_result = db_query( $t_query, $t_params );
+	return $t_result;
+}
+
+/**
  * Creates and executes a query for the history rows related to bugs matched by the provided filter
  * @param  array $p_filter           Filter array
  * @param  integer $p_start_time     The start time to filter by, or null for all.
  * @param  integer $p_end_time       The end time to filter by, or null for all.
  * @param  string  $p_history_order  The sort order.
  * @return database result to pass into history_get_event_from_row().
+ * @deprecated		Use history_query_result() instead
  */
 function history_get_range_result_filter( $p_filter, $p_start_time = null, $p_end_time = null, $p_history_order = null ) {
-	if ( $p_history_order === null ) {
-		$t_history_order = config_get( 'history_order' );
-	} else {
-		$t_history_order = $p_history_order;
+	error_parameters( __FUNCTION__ . '()', 'history_query_result()' );
+	trigger_error( ERROR_DEPRECATED_SUPERSEDED, DEPRECATED );
+
+	$t_query_options = array();
+	if ( $p_history_order !== null ) {
+		$t_query_options['order'] = $p_history_order;
 	}
-
-	# Note: filter_get_bug_rows_query_clauses() calls db_param_push();
-	$t_query_clauses = filter_get_bug_rows_query_clauses( $p_filter, null, null, null );
-
-	# if the query can't be formed, there are no results
-	if( empty( $t_query_clauses ) ) {
-		# reset the db_param stack that was initialized by "filter_get_bug_rows_query_clauses()"
-		db_param_pop();
-		return db_empty_result();
-	}
-
-	$t_select_string = 'SELECT {bug}.id ';
-	$t_from_string = ' FROM ' . implode( ', ', $t_query_clauses['from'] );
-	$t_join_string = count( $t_query_clauses['join'] ) > 0 ? implode( ' ', $t_query_clauses['join'] ) : ' ';
-	$t_where_string = ' WHERE '. implode( ' AND ', $t_query_clauses['project_where'] );
-	if( count( $t_query_clauses['where'] ) > 0 ) {
-		$t_where_string .= ' AND ( ';
-		$t_where_string .= implode( $t_query_clauses['operator'], $t_query_clauses['where'] );
-		$t_where_string .= ' ) ';
-	}
-
-	$t_query = 'SELECT * FROM {bug_history} WHERE {bug_history}.bug_id IN'
-			. ' ( ' . $t_select_string . $t_from_string . $t_join_string . $t_where_string . ' )';
-
-	$t_params = $t_query_clauses['where_values'];
-	$t_where = array();
 	if ( $p_start_time !== null ) {
-		$t_where[] = 'date_modified >= ' . db_param();
-		$t_params[] = $p_start_time;
+		$t_query_options['start_time'] = $p_start_time;
 	}
-
 	if ( $p_end_time !== null ) {
-		$t_where[] = 'date_modified < ' . db_param();
-		$t_params[] = $p_end_time;
+		$t_query_options['end_time'] = $p_end_time;
 	}
-
-	if ( count( $t_where ) > 0 ) {
-		$t_query .= ' AND ' . implode( ' AND ', $t_where );
+	if ( $p_filter !== null ) {
+		$t_query_options['filter'] = $p_filter;
 	}
-
-	$t_query .= ' ORDER BY {bug_history}.date_modified ' . $t_history_order . ', {bug_history}.id ' . $t_history_order;
-	$t_result = db_query( $t_query, $t_params );
-	return $t_result;
+	return history_query_result( $t_query_options );
 }
 
 /**
@@ -244,43 +321,26 @@ function history_get_range_result_filter( $p_filter, $p_start_time = null, $p_en
  * @param  integer $p_end_time       The end time to filter by, or null for all.
  * @param  string  $p_history_order  The sort order.
  * @return IteratorAggregate|boolean database result to pass into history_get_event_from_row().
+ * @deprecated		Use history_query_result() instead
  */
 function history_get_range_result( $p_bug_id = null, $p_start_time = null, $p_end_time = null, $p_history_order = null ) {
-	if ( $p_history_order === null ) {
-		$t_history_order = config_get( 'history_order' );
-	} else {
-		$t_history_order = $p_history_order;
+	error_parameters( __FUNCTION__ . '()', 'history_query_result()' );
+	trigger_error( ERROR_DEPRECATED_SUPERSEDED, DEPRECATED );
+
+	$t_query_options = array();
+	if ( $p_history_order !== null ) {
+		$t_query_options['order'] = $p_history_order;
 	}
-
-	db_param_push();
-	$t_query = 'SELECT * FROM {bug_history}';
-	$t_params = array();
-	$t_where = array();
-
-	if ( $p_bug_id !== null ) {
-		$t_where[] = 'bug_id=' . db_param();
-		$t_params = array( $p_bug_id );
-	}
-
 	if ( $p_start_time !== null ) {
-		$t_where[] = 'date_modified >= ' . db_param();
-		$t_params[] = $p_start_time;
+		$t_query_options['start_time'] = $p_start_time;
 	}
-
 	if ( $p_end_time !== null ) {
-		$t_where[] = 'date_modified < ' . db_param();
-		$t_params[] = $p_end_time;
+		$t_query_options['end_time'] = $p_end_time;
 	}
-
-	if ( count( $t_where ) > 0 ) {
-		$t_query .= ' WHERE ' . implode( ' AND ', $t_where );
+	if ( $p_bug_id !== null ) {
+		$t_query_options['bug_id'] = $p_bug_id;
 	}
-
-	$t_query .= ' ORDER BY date_modified ' . $t_history_order . ',id ' . $t_history_order;
-
-	$t_result = db_query( $t_query, $t_params );
-
-	return $t_result;
+	return history_query_result( $t_query_options );
 }
 
 /**
@@ -424,14 +484,12 @@ function history_get_event_from_row( $p_result, $p_user_id = null, $p_check_acce
 function history_get_raw_events_array( $p_bug_id, $p_user_id = null, $p_start_time = null, $p_end_time = null ) {
 	$t_user_id = (( null === $p_user_id ) ? auth_get_current_user_id() : $p_user_id );
 
-	# grab history and display by date_modified then field_name
-	# @@@ by MASC I guess it's better by id then by field_name. When we have more history lines with the same
-	# date, it's better to respect the storing order otherwise we should risk to mix different information
-	# I give you an example. We create a child of a bug with different custom fields. In the history of the child
-	# bug we will find the line related to the relationship mixed with the custom fields (the history is creted
-	# for the new bug with the same timestamp...)
-
-	$t_result = history_get_range_result( $p_bug_id, $p_start_time, $p_end_time );
+	$t_query_options = array(
+		'bug_id' => $p_bug_id,
+		'start_time' => $p_start_time,
+		'end_time' => $p_end_time
+		);
+	$t_result = history_query_result( $t_query_options );
 
 	$t_raw_history = array();
 
@@ -449,6 +507,203 @@ function history_get_raw_events_array( $p_bug_id, $p_user_id = null, $p_start_ti
 	# end for loop
 
 	return $t_raw_history;
+}
+
+/**
+ * Localize the specified field name for native or custom fields.
+ *
+ * @param string $p_field_name The field name.
+ * @return string The localized field name.
+ */
+function history_localize_field_name( $p_field_name ) {
+	switch( $p_field_name ) {
+		case 'category':
+			$t_field_localized = lang_get( 'category' );
+			break;
+		case 'status':
+			$t_field_localized = lang_get( 'status' );
+			break;
+		case 'severity':
+			$t_field_localized = lang_get( 'severity' );
+			break;
+		case 'reproducibility':
+			$t_field_localized = lang_get( 'reproducibility' );
+			break;
+		case 'resolution':
+			$t_field_localized = lang_get( 'resolution' );
+			break;
+		case 'priority':
+			$t_field_localized = lang_get( 'priority' );
+			break;
+		case 'eta':
+			$t_field_localized = lang_get( 'eta' );
+			break;
+		case 'view_state':
+			$t_field_localized = lang_get( 'view_status' );
+			break;
+		case 'projection':
+			$t_field_localized = lang_get( 'projection' );
+			break;
+		case 'sticky':
+			$t_field_localized = lang_get( 'sticky_issue' );
+			break;
+		case 'project_id':
+			$t_field_localized = lang_get( 'email_project' );
+			break;
+		case 'handler_id':
+			$t_field_localized = lang_get( 'assigned_to' );
+			break;
+		case 'reporter_id':
+			$t_field_localized = lang_get( 'reporter' );
+			break;
+		case 'version':
+			$t_field_localized = lang_get( 'product_version' );
+			break;
+		case 'fixed_in_version':
+			$t_field_localized = lang_get( 'fixed_in_version' );
+			break;
+		case 'target_version':
+			$t_field_localized = lang_get( 'target_version' );
+			break;
+		case 'date_submitted':
+			$t_field_localized = lang_get( 'date_submitted' );
+			break;
+		case 'last_updated':
+			$t_field_localized = lang_get( 'last_update' );
+			break;
+		case 'os':
+			$t_field_localized = lang_get( 'os' );
+			break;
+		case 'os_build':
+			$t_field_localized = lang_get( 'os_version' );
+			break;
+		case 'build':
+			$t_field_localized = lang_get( 'build' );
+			break;
+		case 'platform':
+			$t_field_localized = lang_get( 'platform' );
+			break;
+		case 'summary':
+			$t_field_localized = lang_get( 'summary' );
+			break;
+		case 'duplicate_id':
+			$t_field_localized = lang_get( 'duplicate_id' );
+			break;
+		case 'sponsorship_total':
+			$t_field_localized = lang_get( 'sponsorship_total' );
+			break;
+		case 'due_date':
+			$t_field_localized = lang_get( 'due_date' );
+			break;
+		default:
+			# assume it's a custom field name
+			$t_field_localized = lang_get_defaulted( $p_field_name );
+			break;
+	}
+
+	return $t_field_localized;
+}
+
+/**
+ * Get name of the change type.
+ *
+ * @param integer $p_type The type code.
+ * @return string The type name.
+ */
+function history_get_type_name( $p_type ) {
+	$t_type = (int)$p_type;
+
+	switch( $t_type ) {
+		case NORMAL_TYPE:
+			$t_type_name = 'field-updated';
+			break;
+		case NEW_BUG:
+			$t_type_name = 'issue-new';
+			break;
+		case BUGNOTE_ADDED:
+			$t_type_name = 'note-added';
+			break;
+		case BUGNOTE_UPDATED:
+			$t_type_name = 'note-updated';
+			break;
+		case BUGNOTE_DELETED:
+			$t_type_name = 'note-deleted';
+			break;
+		case DESCRIPTION_UPDATED:
+			$t_type_name = 'issue-description-updated';
+			break;
+		case ADDITIONAL_INFO_UPDATED:
+			$t_type_name = 'issue-additional-info-updated';
+			break;
+		case STEP_TO_REPRODUCE_UPDATED:
+			$t_type_name = 'issue-steps-to-reproduce-updated';
+			break;
+		case FILE_ADDED:
+			$t_type_name = 'file-added';
+			break;
+		case FILE_DELETED:
+			$t_type_name = 'file-deleted';
+			break;
+		case BUGNOTE_STATE_CHANGED:
+			$t_type_name = 'note-view-state-updated';
+			break;
+		case BUG_MONITOR:
+			$t_type_name = 'monitor-added';
+			break;
+		case BUG_UNMONITOR:
+			$t_type_name = 'monitor-deleted';
+			break;
+		case BUG_DELETED:
+			$t_type_name = 'issue-deleted';
+			break;
+		case BUG_ADD_SPONSORSHIP:
+			$t_type_name = 'sponsorship-added';
+			break;
+		case BUG_UPDATE_SPONSORSHIP:
+			$t_type_name = 'sponsorship-updated';
+			break;
+		case BUG_DELETE_SPONSORSHIP:
+			$t_type_name = 'sponsorship-deleted';
+			break;
+		case BUG_PAID_SPONSORSHIP:
+			$t_type_name = 'sponsorship-paid';
+			break;
+		case BUG_ADD_RELATIONSHIP:
+			$t_type_name = 'relationship-added';
+			break;
+		case BUG_REPLACE_RELATIONSHIP:
+			$t_type_name = 'relationship-updated';
+			break;
+		case BUG_DEL_RELATIONSHIP:
+			$t_type_name = 'relationship-deleted';
+			break;
+		case BUG_CLONED_TO:
+			$t_type_name = 'issue-cloned-to';
+			break;
+		case BUG_CREATED_FROM:
+			$t_type_name = 'issue-cloned-from';
+			break;
+		case TAG_ATTACHED:
+			$t_type_name = 'tag-added';
+			break;
+		case TAG_DETACHED:
+			$t_type_name = 'tag-deleted';
+			break;
+		case TAG_RENAMED:
+			$t_type_name = 'tag-updated';
+			break;
+		case BUG_REVISION_DROPPED:
+			$t_type_name = 'revision-deleted';
+			break;
+		case BUGNOTE_REVISION_DROPPED:
+			$t_type_name = 'note-revision-deleted';
+			break;
+		default:
+			$t_type_name = '';
+			break;
+	}
+
+	return $t_type_name;
 }
 
 /**
@@ -474,54 +729,43 @@ function history_localize_item( $p_field_name, $p_type, $p_old_value, $p_new_val
 		return array( 'note' => $t_note, 'change' => $t_change, 'raw' => true );
 	}
 
+	$t_field_localized = history_localize_field_name( $p_field_name );
 	switch( $p_field_name ) {
-		case 'category':
-			$t_field_localized = lang_get( 'category' );
-			break;
 		case 'status':
 			$p_old_value = get_enum_element( 'status', $p_old_value );
 			$p_new_value = get_enum_element( 'status', $p_new_value );
-			$t_field_localized = lang_get( 'status' );
 			break;
 		case 'severity':
 			$p_old_value = get_enum_element( 'severity', $p_old_value );
 			$p_new_value = get_enum_element( 'severity', $p_new_value );
-			$t_field_localized = lang_get( 'severity' );
 			break;
 		case 'reproducibility':
 			$p_old_value = get_enum_element( 'reproducibility', $p_old_value );
 			$p_new_value = get_enum_element( 'reproducibility', $p_new_value );
-			$t_field_localized = lang_get( 'reproducibility' );
 			break;
 		case 'resolution':
 			$p_old_value = get_enum_element( 'resolution', $p_old_value );
 			$p_new_value = get_enum_element( 'resolution', $p_new_value );
-			$t_field_localized = lang_get( 'resolution' );
 			break;
 		case 'priority':
 			$p_old_value = get_enum_element( 'priority', $p_old_value );
 			$p_new_value = get_enum_element( 'priority', $p_new_value );
-			$t_field_localized = lang_get( 'priority' );
 			break;
 		case 'eta':
 			$p_old_value = get_enum_element( 'eta', $p_old_value );
 			$p_new_value = get_enum_element( 'eta', $p_new_value );
-			$t_field_localized = lang_get( 'eta' );
 			break;
 		case 'view_state':
 			$p_old_value = get_enum_element( 'view_state', $p_old_value );
 			$p_new_value = get_enum_element( 'view_state', $p_new_value );
-			$t_field_localized = lang_get( 'view_status' );
 			break;
 		case 'projection':
 			$p_old_value = get_enum_element( 'projection', $p_old_value );
 			$p_new_value = get_enum_element( 'projection', $p_new_value );
-			$t_field_localized = lang_get( 'projection' );
 			break;
 		case 'sticky':
 			$p_old_value = gpc_string_to_bool( $p_old_value ) ? lang_get( 'yes' ) : lang_get( 'no' );
 			$p_new_value = gpc_string_to_bool( $p_new_value ) ? lang_get( 'yes' ) : lang_get( 'no' );
-			$t_field_localized = lang_get( 'sticky_issue' );
 			break;
 		case 'project_id':
 			if( project_exists( $p_old_value ) ) {
@@ -537,14 +781,9 @@ function history_localize_item( $p_field_name, $p_type, $p_old_value, $p_new_val
 			} else {
 				$p_new_value = '@' . $p_new_value . '@';
 			}
-			$t_field_localized = lang_get( 'email_project' );
 			break;
 		case 'handler_id':
-			$t_field_localized = lang_get( 'assigned_to' );
 		case 'reporter_id':
-			if( 'reporter_id' == $p_field_name ) {
-				$t_field_localized = lang_get( 'reporter' );
-			}
 			if( 0 == $p_old_value ) {
 				$p_old_value = '';
 			} else {
@@ -557,45 +796,13 @@ function history_localize_item( $p_field_name, $p_type, $p_old_value, $p_new_val
 				$p_new_value = user_get_name( $p_new_value );
 			}
 			break;
-		case 'version':
-			$t_field_localized = lang_get( 'product_version' );
-			break;
-		case 'fixed_in_version':
-			$t_field_localized = lang_get( 'fixed_in_version' );
-			break;
-		case 'target_version':
-			$t_field_localized = lang_get( 'target_version' );
-			break;
 		case 'date_submitted':
 			$p_old_value = date( config_get( 'normal_date_format' ), $p_old_value );
 			$p_new_value = date( config_get( 'normal_date_format' ), $p_new_value );
-			$t_field_localized = lang_get( 'date_submitted' );
 			break;
 		case 'last_updated':
 			$p_old_value = date( config_get( 'normal_date_format' ), $p_old_value );
 			$p_new_value = date( config_get( 'normal_date_format' ), $p_new_value );
-			$t_field_localized = lang_get( 'last_update' );
-			break;
-		case 'os':
-			$t_field_localized = lang_get( 'os' );
-			break;
-		case 'os_build':
-			$t_field_localized = lang_get( 'os_version' );
-			break;
-		case 'build':
-			$t_field_localized = lang_get( 'build' );
-			break;
-		case 'platform':
-			$t_field_localized = lang_get( 'platform' );
-			break;
-		case 'summary':
-			$t_field_localized = lang_get( 'summary' );
-			break;
-		case 'duplicate_id':
-			$t_field_localized = lang_get( 'duplicate_id' );
-			break;
-		case 'sponsorship_total':
-			$t_field_localized = lang_get( 'sponsorship_total' );
 			break;
 		case 'due_date':
 			if( $p_old_value !== '' ) {
@@ -604,10 +811,8 @@ function history_localize_item( $p_field_name, $p_type, $p_old_value, $p_new_val
 			if( $p_new_value !== '' ) {
 				$p_new_value = date( config_get( 'normal_date_format' ), (int)$p_new_value );
 			}
-			$t_field_localized = lang_get( 'due_date' );
 			break;
 		default:
-
 			# assume it's a custom field name
 			$t_field_id = custom_field_get_id_from_name( $p_field_name );
 			if( false !== $t_field_id ) {
@@ -615,8 +820,8 @@ function history_localize_item( $p_field_name, $p_type, $p_old_value, $p_new_val
 				if( '' != $p_old_value ) {
 					$p_old_value = string_custom_field_value_for_email( $p_old_value, $t_cf_type );
 				}
+
 				$p_new_value = string_custom_field_value_for_email( $p_new_value, $t_cf_type );
-				$t_field_localized = lang_get_defaulted( $p_field_name );
 			}
 		}
 

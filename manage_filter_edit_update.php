@@ -78,11 +78,11 @@ if( $f_filter_name != filter_get_field( $f_filter_id, 'name' ) ) {
 if( access_has_project_level( config_get( 'stored_query_create_shared_threshold' ) ) ) {
 	$f_is_public = gpc_get_bool( 'is_public' );
 } else {
-	# dont modify it
+	# don't modify it
 	$f_is_public = null;
 }
 
-$f_project_id = gpc_get_int( 'project_id', null );
+$f_project_id = gpc_get_int( 'filter_project_id', null );
 
 $t_editable = filter_db_can_delete_filter( $f_filter_id );
 if( !$t_editable ) {

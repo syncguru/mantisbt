@@ -319,7 +319,7 @@ function helper_get_current_project() {
 	}
 
 	if( $g_cache_current_project === null ) {
-		$t_cookie_name = config_get( 'project_cookie' );
+		$t_cookie_name = config_get_global( 'project_cookie' );
 
 		$t_project_id = gpc_get_cookie( $t_cookie_name, null );
 
@@ -347,7 +347,7 @@ function helper_get_current_project() {
  * @return array
  */
 function helper_get_current_project_trace() {
-	$t_cookie_name = config_get( 'project_cookie' );
+	$t_cookie_name = config_get_global( 'project_cookie' );
 
 	$t_project_id = gpc_get_cookie( $t_cookie_name, null );
 
@@ -388,7 +388,7 @@ function helper_get_current_project_trace() {
 function helper_set_current_project( $p_project_id ) {
 	global $g_cache_current_project;
 
-	$t_project_cookie_name = config_get( 'project_cookie' );
+	$t_project_cookie_name = config_get_global( 'project_cookie' );
 
 	$g_cache_current_project = $p_project_id;
 	gpc_set_cookie( $t_project_cookie_name, $p_project_id, true );
@@ -401,9 +401,9 @@ function helper_set_current_project( $p_project_id ) {
  * @return void
  */
 function helper_clear_pref_cookies() {
-	gpc_clear_cookie( config_get( 'project_cookie' ) );
+	gpc_clear_cookie( config_get_global( 'project_cookie' ) );
 	gpc_clear_cookie( config_get( 'manage_users_cookie' ) );
-	gpc_clear_cookie( config_get( 'manage_config_cookie' ) );
+	gpc_clear_cookie( config_get_global( 'manage_config_cookie' ) );
 }
 
 /**
@@ -503,6 +503,17 @@ function helper_project_specific_where( $p_project_id, $p_user_id = null ) {
 function helper_get_columns_to_view( $p_columns_target = COLUMNS_TARGET_VIEW_PAGE, $p_viewable_only = true, $p_user_id = null ) {
 	$t_columns = helper_call_custom_function( 'get_columns_to_view', array( $p_columns_target, $p_user_id ) );
 
+	# Fix column names for custom field columns that may be stored as lowercase in configuration. See issue #17367
+	# If the system was working fine with lowercase names, then database is case-insensitive, eg: mysql
+	# Fix by forcing a search with current name to get the id, then get the actual name by looking up this id
+	foreach( $t_columns as &$t_column_name ) {
+		$t_cf_name = column_get_custom_field_name( $t_column_name );
+		if( $t_cf_name ) {
+			$t_cf_id = custom_field_get_id_from_name( $t_cf_name );
+			$t_column_name = column_get_custom_field_column_name( $t_cf_id );
+		}
+	}
+
 	if( !$p_viewable_only ) {
 		return $t_columns;
 	}
@@ -593,7 +604,7 @@ function helper_log_to_page() {
  * @return boolean
  */
 function helper_show_query_count() {
-	return ON == config_get( 'show_queries_count' );
+	return ON == config_get_global( 'show_queries_count' );
 }
 
 /**
@@ -676,4 +687,76 @@ function helper_duration_to_minutes( $p_hhmm ) {
  */
 function shutdown_functions_register() {
 	register_shutdown_function( 'email_shutdown_function' );
+}
+
+/**
+ * Filter a set of strings by finding strings that start with a case-insensitive prefix.
+ * @param array  $p_set    An array of strings to search through.
+ * @param string $p_prefix The prefix to filter by.
+ * @return array An array of strings which match the supplied prefix.
+ */
+function helper_filter_by_prefix( array $p_set, $p_prefix ) {
+	$t_matches = array();
+	foreach ( $p_set as $p_item ) {
+		if( utf8_strtolower( utf8_substr( $p_item, 0, utf8_strlen( $p_prefix ) ) ) === utf8_strtolower( $p_prefix ) ) {
+			$t_matches[] = $p_item;
+		}
+	}
+	return $t_matches;
+}
+
+/**
+ * Combine a Mantis page with a query string.  This handles the case where the page is a native
+ * page or a plugin page.
+ * @param string $p_page The page (relative or full)
+ * @param string $p_query_string The query string
+ * @return string The combined url.
+ */
+function helper_url_combine( $p_page, $p_query_string ) {
+	$t_url = $p_page;
+
+	if( !is_blank( $p_query_string ) ) {
+		if( stripos( $p_page, '?' ) !== false ) {
+			$t_url .= '&' . $p_query_string;
+		} else {
+			$t_url .= '?' . $p_query_string;
+		}
+	}
+
+	return $t_url;
+}
+
+/**
+ * Generate a hash to be used with dynamically generated content that is expected
+ * to be cached by the browser. This hash can be used to differentiate the generated
+ * content when it may be different based on some runtime attributes like: current user,
+ * project or language.
+ * An optional custom string can be provided to be added to the hash, for additional
+ * differentiating criteria, but this string must be already prepared by the caller.
+ *
+ * @param array $p_runtime_attrs    Array of attributes to be calculated from current session.
+ *                                  possible values: 'user', 'project', 'lang'
+ * @param string $p_custom_string   Additional string provided by the caller
+ * @return string                   A hashed md5 string
+ */
+function helper_generate_cache_key( array $p_runtime_attrs = [], $p_custom_string = '' ) {
+	# always add core version, to force reload of resources after an upgrade.
+	$t_key = $p_custom_string . '+V' . MANTIS_VERSION;
+	$t_user_auth = auth_is_user_authenticated();
+	foreach( $p_runtime_attrs as $t_attr ) {
+		switch( $t_attr ) {
+			case 'user':
+				$t_key .= '+U' . ( $t_user_auth ? auth_get_current_user_id() : META_FILTER_NONE );
+				break;
+			case 'project':
+				$t_key .= '+P' . ( $t_user_auth ? helper_get_current_project() : META_FILTER_NONE );
+				break;
+			case 'lang':
+				$t_key .= '+L' . lang_get_current();
+				break;
+			default:
+				trigger_error( ERROR_GENERIC, ERROR );
+		}
+	}
+	return md5( $t_key );
 }
