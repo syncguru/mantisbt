@@ -253,9 +253,6 @@ echo '<div class="space-4"></div>';
 echo '<div class="clearfix noprint">';
 echo '<div class="btn-group pull-left hidden-xs">';
 
-# Jump to Bugnotes
-print_extra_small_button( '#bugnotes', lang_get( 'jump_to_bugnotes' ) );
-
 # Send Bug Reminder
 if( $t_show_reminder_link ) {
 	print_extra_small_button( $t_bug_reminder_link, lang_get( 'bug_reminder' ) );
@@ -282,7 +279,7 @@ foreach ( $t_links as $t_plugin => $t_hooks ) {
 }
 
 # Jump to Bugnotes
-print_small_button( '#bugnotes', lang_get( 'jump_to_bugnotes' ) );
+print_extra_small_button( '#bugnotes', lang_get( 'jump_to_bugnotes' ) );
 
 # Display or Jump to History
 if( !is_blank( $t_history_link ) ) {
